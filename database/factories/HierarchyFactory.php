@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Heirachies>
  */
-class HeirachyFactory extends Factory
+class HierarchyFactory extends Factory
 {
 
     /**

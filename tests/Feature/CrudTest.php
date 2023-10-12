@@ -102,7 +102,7 @@ abstract class CrudTest extends TestCase
             ->assertStatus(200);
     }
 
-    public function atestSearch()
+    public function testSearch()
     {
         if (isset($this->search)) {
             $search = 'por';

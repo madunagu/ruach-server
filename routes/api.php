@@ -13,6 +13,7 @@ use App\Http\Controllers\DevotionalController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\HierarchyController;
+use App\Http\Controllers\HierarchyTreeController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\SocietyController;
@@ -52,8 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/addresses/{id}', [AddressController::class, 'get']);
     Route::put('/addresses/{id}', [AddressController::class, 'update']);
     Route::delete('/addresses/{id}', [AddressController::class, 'delete']);
-    
-    
+
     Route::get('/churches', [ChurchController::class, 'list']);
     Route::post('/churches', [ChurchController::class, 'create']);
     Route::get('/churches/{id}', [ChurchController::class, 'get']);
@@ -90,19 +90,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/devotionals/{id}',  [DevotionalController::class, 'delete']);
     Route::post('/devotionals/{id}',  [DevotionalController::class, 'devote']);
 
-
     Route::get('/hierarchies',  [HierarchyController::class, 'list']);
     Route::post('/hierarchies', [HierarchyController::class, 'create']);
     Route::get('/hierarchies/{id}', [HierarchyController::class, 'get']);
     Route::put('/hierarchies/{id}',  [HierarchyController::class, 'update']);
     Route::delete('/hierarchies/{id}', [HierarchyController::class, 'delete']);
 
-
-    Route::get('/hierarchy-trees', 'HierarchyTreeController@list');
-    Route::post('/hierarchy-trees', 'HierarchyTreeController@create');
-    Route::get('/hierarchy-trees/{id}', 'HierarchyTreeController@get');
-    Route::put('/hierarchy-trees/{id}', 'HierarchyTreeController@update');
-    Route::delete('/hierarchy-trees/{id}', 'HierarchyTreeController@delete');
+    Route::get('/hierarchy-trees',  [HierarchyTreeController::class, 'list']);
+    Route::post('/hierarchy-trees',  [HierarchyTreeController::class, 'create']);
+    Route::get('/hierarchy-trees/{id}', [HierarchyTreeController::class, 'get']);
+    Route::put('/hierarchy-trees/{id}',  [HierarchyTreeController::class, 'update']);
+    Route::delete('/hierarchy-trees/{id}', [HierarchyTreeController::class, 'delete']);
 
     Route::post('/images', [ImageController::class, 'create']);
     Route::get('/images/{id}',  [ImageController::class, 'get']);

@@ -29,6 +29,7 @@ class DevotionalController extends Controller
 
 
         $data = collect($request->all())->toArray();
+        $data['day']= $data['day']['date'];
         $data['poster_id'] = Auth::user()->id;
         $data['poster_type'] = 'user';
         $result = Devotional::create($data);

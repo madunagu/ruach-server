@@ -28,7 +28,8 @@ class DevotionalFactory extends Factory
         'memory_verse' => 'John 3:16',
         'day' => fake()->dateTime,
         'poster_id' => fake()->numberBetween(1,10),
-        'poster_type' => 'user'
+        'poster_type' => 'user',
+        'user_id'=> fake()->numberBetween(1,20),
     ];
 }
 
