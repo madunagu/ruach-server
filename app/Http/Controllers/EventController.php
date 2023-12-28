@@ -142,7 +142,7 @@ class EventController extends Controller
     public function attend(Request $request)
     {
         $id = $request->route('id');
-        $tog = $request['val'];
+        $tog = $request['value'];
         $userId = Auth::id();
         $event = Event::find((int)$id);
         if ($tog) {

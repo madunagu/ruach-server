@@ -13,7 +13,7 @@ class Devotional extends Model
 {
     use SearchableTrait, SoftDeletes, HasFactory;
 
-    protected $fillable = ['title', 'opening_prayer', 'closing_prayer', 'body', 'memory_verse', 'day', 'poster_id', 'poster_type'];
+    protected $fillable = ['title', 'opening_prayer', 'closing_prayer', 'body', 'memory_verse', 'day', 'poster_id', 'poster_type','user_id'];
 
     public function images()
     {
