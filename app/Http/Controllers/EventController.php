@@ -20,6 +20,7 @@ class EventController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'string|required|max:255',
+            'description' => 'nulllable|string',
             'church_id' => 'nullable|integer|exists:churches,id',
             'starting_at' => 'nullable|date',
             'ending_at' => 'nullable|date',
@@ -81,7 +82,7 @@ class EventController extends Controller
         $id = (int) $request->route('id');
         $userId = Auth::user()->id;
         if ($event = Event::withCount('comments')
-            ->with(['comments', 'user', 'churches', 'addresses']) // ,'poster'])
+            ->with(['comments', 'user', 'churches', 'addresses','poster']) // ,'poster'])
             ->with(['attendees' => function ($query) {
                 $query->limit(7);
             }])

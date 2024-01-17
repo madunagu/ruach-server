@@ -96,7 +96,7 @@ class PostController extends Controller
         $orderParams = $this->orderParams($params);
         $length = (int) (empty($request['perPage']) ? 15 : $request['perPage']);
 
-        $comments = Post::with('user')->withCount('likes')->withCount('comments')->withCount('views')
+        $comments = Post::with('user','poster')->withCount('likes')->withCount('comments')->withCount('views')
             ->orderBy('posts.' . $orderParams->order,  $orderParams->direction)
             ->paginate($length);
 

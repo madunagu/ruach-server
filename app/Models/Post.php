@@ -23,6 +23,12 @@ class Post extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    public function poster()
+    {
+        return $this->morphTo('poster');
+    }
+
     public function tags()
     {
         return $this->morphToMany(Tag::class, 'taggable');
