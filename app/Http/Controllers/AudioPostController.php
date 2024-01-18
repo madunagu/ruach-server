@@ -53,9 +53,10 @@ class AudioPostController extends Controller
         $audio  = $request['audio'];
         //TODO: parse the audio extension from the base64encoded file
         $name = time() . '.mp3';
-        $fileMoved = Storage::put('public/audio/full' . $name, $audio);
-        $path = 'storage/audio/full' . $name;
-        $data['src_url']= $path;
+        $fileMoved = Storage::put('public/audio/full/' . $name, $audio);
+        $path = 'storage/audio/full/' . $name;
+
+        $data['src_url'] =  Storage::url($path);
 
         $audio = AudioPost::create($data);
         $interacted = $this->saveRelated($data, $audio);
@@ -157,7 +158,7 @@ class AudioPostController extends Controller
     {
         $id = (int)$request->route('id');
         $userId = Auth::user()->id;
-        if ($audio = AudioPost::with(['srcs','comments', 'images', 'author', 'user', 'churches', 'addresses'])
+        if ($audio = AudioPost::with(['srcs', 'comments', 'images', 'author', 'user', 'churches', 'addresses'])
             ->withCount([
                 'comments',
                 'likes',
@@ -195,7 +196,7 @@ class AudioPostController extends Controller
         }
 
         $query = $request['q'];
-        $audia = AudioPost::with('author', 'user','srcs')
+        $audia = AudioPost::with('author', 'user', 'srcs')
             ->orderBy('audio_posts.created_at', 'DESC');
         if ($query) {
             $audia = $audia->search($query);
