@@ -35,7 +35,7 @@ class VideoPost extends Model
         'full_text',
         'description',
         'author_id',
-        'uploader_id',
+        'user_id',
         'size',
         'length',
         'language',

@@ -49,7 +49,7 @@ class AudioPostController extends Controller
 
         $data = collect($request->all())->toArray();
 
-        $data['uploader_id'] = Auth::user()->id;
+        $data['user_id'] = Auth::user()->id;
         $audio  = $request['audio'];
         //TODO: parse the audio extension from the base64encoded file
         $name = time() . '.mp3';
@@ -138,14 +138,14 @@ class AudioPostController extends Controller
 
         $id = $request->route('id');
         $result = AudioPost::find($id);
-        $result = $this->getTrackDetails($result);
+        $details = $this->getTrackDetails($result);
         $result = $this->getTrackFullText($result);
         //update result
         $result = $result->update($data);
 
 
         if ($result) {
-            return response()->json(['data' => true], 201);
+            return response()->json(['data' => $result], 201);
         } else {
             return response()->json(['data' => false, 'errors' => 'unknown error occured'], 400);
         }

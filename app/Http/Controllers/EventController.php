@@ -49,7 +49,7 @@ class EventController extends Controller
 
     public function update(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'id' => 'integer|required|exists:events,id',
             'name' => 'string|required|max:255',
             'church_id' => 'nullable|integer|exists:churches,id',
@@ -59,9 +59,9 @@ class EventController extends Controller
             'hierarchy_group_id' => 'nullable|integer|exists:hierarchy_groups,id',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json($validator->messages(), 422);
-        }
+        // if ($validator->fails()) {
+        //     return response()->json($validator->messages(), 422);
+        // }
         $data = collect($request->all())->toArray();
         $data['user_id'] = Auth::user()->id;
         $id = $request->route('id');
@@ -71,7 +71,7 @@ class EventController extends Controller
 
 
         if ($result) {
-            return response()->json(['data' => true], 201);
+            return response()->json(['data' => $result], 201);
         } else {
             return response()->json(['data' => false, 'errors' => 'unknown error occured'], 400);
         }

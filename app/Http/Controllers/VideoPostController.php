@@ -150,7 +150,7 @@ class VideoPostController extends Controller
 
 
         if ($result) {
-            return response()->json(['data' => true], 201);
+            return response()->json(['data' => $result], 201);
         } else {
             return response()->json(['data' => false, 'errors' => 'unknown error occured'], 400);
         }
