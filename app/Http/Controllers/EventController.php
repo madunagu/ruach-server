@@ -18,7 +18,7 @@ class EventController extends Controller
 
     public function create(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'name' => 'string|required|max:255',
             'description' => 'nulllable|string',
             'church_id' => 'nullable|integer|exists:churches,id',
@@ -28,9 +28,9 @@ class EventController extends Controller
             'hierarchy_group_id' => 'nullable|integer|exists:hierarchy_groups,id',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json($validator->messages(), 422);
-        }
+        // if ($validator->fails()) {
+        //     return response()->json($validator->messages(), 422);
+        // }
 
         $data = collect($request->all())->toArray();
         $data['user_id'] = Auth::user()->id;
@@ -82,7 +82,7 @@ class EventController extends Controller
         $id = (int) $request->route('id');
         $userId = Auth::user()->id;
         if ($event = Event::withCount('comments')
-            ->with(['comments', 'user', 'churches', 'addresses','poster']) // ,'poster'])
+            ->with(['comments', 'user', 'churches', 'addresses', 'poster']) // ,'poster'])
             ->with(['attendees' => function ($query) {
                 $query->limit(7);
             }])
