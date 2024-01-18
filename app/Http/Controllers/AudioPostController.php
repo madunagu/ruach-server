@@ -53,8 +53,8 @@ class AudioPostController extends Controller
         $audio  = $request['audio'];
         //TODO: parse the audio extension from the base64encoded file
         $name = time() . '.mp3';
-        $fileMoved = Storage::put('public/audio/full/' . $name, $audio);
-        $path = 'storage/audio/full/' . $name;
+        $fileMoved = Storage::put('audio/full/' . $name, $audio);
+        $path = 'audio/full/' . $name;
 
         $data['src_url'] =  Storage::url($path);
 
