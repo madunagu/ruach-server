@@ -67,7 +67,7 @@ class AudioPostController extends Controller
         // $src = AudioSrc::create(['refresh_rate' => '20', 'bitrate' => '120', 'src' => $path, 'size' => $res['size'], 'format' => 'mp3', 'audio_post_id' => $audio->id,]);
 
         if ($audio) {
-            return response()->json(['data' => true], 201);
+            return response()->json(['data' => $audio], 201);
         } else {
             return response()->json(['data' => false, 'errors' => 'unknown error occured'], 400);
         }

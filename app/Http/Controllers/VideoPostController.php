@@ -50,15 +50,17 @@ class VideoPostController extends Controller
         $fileMoved = Storage::put('public/video/full' . $name, $video);
 
         $pp = '/storage/video/full/' . $name;
+        $data['src_url']= $pp;
         $src = VideoSrc::create(['src' => $pp, 'quality' => 1, 'size' => 22333, 'video_post_id' => $videoPost->id,]);
 
         $interacted = $this->saveRelated($data, $videoPost);
+        //TODO: complete feature later
         //obtain length,size and details of audio
-        $result = $this->getTrackDetails($videoPost);
-        $result = $this->getTrackFullText($result);
+        // $result = $this->getTrackDetails($videoPost);
+        // $result = $this->getTrackFullText($result);
 
-        if ($result) {
-            return response()->json(['data' => true], 201);
+        if ($videoPost) {
+            return response()->json(['data' => $video], 201);
         } else {
             return response()->json(['data' => false, 'errors' => 'unknown error occured'], 400);
         }
