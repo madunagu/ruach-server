@@ -20,7 +20,7 @@ class EventController extends Controller
     {
         $request->validate([
             'name' => 'string|required|max:255',
-            'description' => 'nulllable|string',
+            'description' => 'nullable|string',
             'church_id' => 'nullable|integer|exists:churches,id',
             'starting_at' => 'nullable|date',
             'ending_at' => 'nullable|date',
