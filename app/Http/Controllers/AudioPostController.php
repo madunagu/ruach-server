@@ -55,6 +55,7 @@ class AudioPostController extends Controller
         $name = time() . '.mp3';
         $fileMoved = Storage::put('public/audio/full' . $name, $audio);
         $path = 'storage/audio/full' . $name;
+        $data['src_url']= $path;
 
         $audio = AudioPost::create($data);
         $interacted = $this->saveRelated($data, $audio);
