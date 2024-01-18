@@ -60,10 +60,11 @@ class AudioPostController extends Controller
         $audio = AudioPost::create($data);
         $interacted = $this->saveRelated($data, $audio);
         //obtain length,size and details of audio
-        $res = $this->getTrackDetails($audio);
-        $audio = $this->getTrackFullText($audio);
+        // $res = $this->getTrackDetails($audio);
+        // $audio = $this->getTrackFullText($audio);
 
-        $src = AudioSrc::create(['refresh_rate' => '20', 'bitrate' => '120', 'src' => $path, 'size' => $res['size'], 'format' => 'mp3', 'audio_post_id' => $audio->id,]);
+        //TODO: complete later
+        // $src = AudioSrc::create(['refresh_rate' => '20', 'bitrate' => '120', 'src' => $path, 'size' => $res['size'], 'format' => 'mp3', 'audio_post_id' => $audio->id,]);
 
         if ($audio) {
             return response()->json(['data' => true], 201);
