@@ -4,8 +4,36 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5fd131c13b985da9d3c8cd768ccdf1ce",
+    "content-hash": "a15ff992eabb402e55ede9446ce57b59",
     "packages": [
+        {
+            "name": "bluemoehre/flac-php",
+            "version": "v1.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/bluemoehre/flac-php.git",
+                "reference": "0194a5090124983d5dd8e72440d04955da0abc42"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/bluemoehre/flac-php/zipball/0194a5090124983d5dd8e72440d04955da0abc42",
+                "reference": "0194a5090124983d5dd8e72440d04955da0abc42",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "flac.class.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "description": "PHP class for native reading FLAC's metadata",
+            "support": {
+                "issues": "https://github.com/bluemoehre/flac-php/issues",
+                "source": "https://github.com/bluemoehre/flac-php/tree/master"
+            },
+            "time": "2017-02-12T23:16:24+00:00"
+        },
         {
             "name": "brick/math",
             "version": "0.11.0",
@@ -6936,6 +6964,190 @@
                 }
             ],
             "time": "2022-03-08T17:03:00+00:00"
+        },
+        {
+            "name": "wapmorgan/binary-stream",
+            "version": "0.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/wapmorgan/BinaryStream.git",
+                "reference": "ca4989c15801635d79f65426b1b0fc6fe803b620"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/wapmorgan/BinaryStream/zipball/ca4989c15801635d79f65426b1b0fc6fe803b620",
+                "reference": "ca4989c15801635d79f65426b1b0fc6fe803b620",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~4.8.35"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "wapmorgan\\BinaryStream\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A handy tool for working with binary data",
+            "keywords": [
+                "binary",
+                "binary-data",
+                "reader",
+                "writer"
+            ],
+            "support": {
+                "issues": "https://github.com/wapmorgan/BinaryStream/issues",
+                "source": "https://github.com/wapmorgan/BinaryStream/tree/master"
+            },
+            "time": "2017-06-18T01:02:52+00:00"
+        },
+        {
+            "name": "wapmorgan/file-type-detector",
+            "version": "1.1.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/wapmorgan/FileTypeDetector.git",
+                "reference": "1db30747b674fe9444294c5393794d18f712f114"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/wapmorgan/FileTypeDetector/zipball/1db30747b674fe9444294c5393794d18f712f114",
+                "reference": "1db30747b674fe9444294c5393794d18f712f114",
+                "shasum": ""
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~4.8.35"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "wapmorgan\\FileTypeDetector\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Detects file type by filename or content and generates correct mimetype.",
+            "keywords": [
+                "files",
+                "filetype",
+                "formats",
+                "mimetype"
+            ],
+            "support": {
+                "issues": "https://github.com/wapmorgan/FileTypeDetector/issues",
+                "source": "https://github.com/wapmorgan/FileTypeDetector/tree/master"
+            },
+            "time": "2017-05-13T11:45:42+00:00"
+        },
+        {
+            "name": "wapmorgan/media-file",
+            "version": "0.1.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/wapmorgan/MediaFile.git",
+                "reference": "263f773696e02d173fb9636c9a8111ac84032292"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/wapmorgan/MediaFile/zipball/263f773696e02d173fb9636c9a8111ac84032292",
+                "reference": "263f773696e02d173fb9636c9a8111ac84032292",
+                "shasum": ""
+            },
+            "require": {
+                "bluemoehre/flac-php": "1.0.2",
+                "wapmorgan/binary-stream": "~0.4.0",
+                "wapmorgan/file-type-detector": "^1.0.2",
+                "wapmorgan/mp3info": "~0.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~4.8"
+            },
+            "suggest": {
+                "boyhagemann/wave": "Wav support"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "wapmorgan\\MediaFile\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A unified reader of metadata from audio & video files",
+            "keywords": [
+                "aac",
+                "amr",
+                "avi",
+                "flac",
+                "mp3",
+                "mp4",
+                "ogg",
+                "wav",
+                "wma",
+                "wmv"
+            ],
+            "support": {
+                "issues": "https://github.com/wapmorgan/MediaFile/issues",
+                "source": "https://github.com/wapmorgan/MediaFile/tree/master"
+            },
+            "time": "2018-03-10T00:56:03+00:00"
+        },
+        {
+            "name": "wapmorgan/mp3info",
+            "version": "0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/wapmorgan/Mp3Info.git",
+                "reference": "f4e3b0d606732f667729c116e1baa4f845a65f9d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/wapmorgan/Mp3Info/zipball/f4e3b0d606732f667729c116e1baa4f845a65f9d",
+                "reference": "f4e3b0d606732f667729c116e1baa4f845a65f9d",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "php": ">=5.4.0"
+            },
+            "bin": [
+                "bin/mp3scan"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "wapmorgan\\Mp3Info\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "LGPL-3.0"
+            ],
+            "description": "The fastest php library to extract mp3 tags & meta information.",
+            "keywords": [
+                "audio",
+                "id3",
+                "id3v1",
+                "id3v2",
+                "mp3",
+                "mpeg"
+            ],
+            "support": {
+                "issues": "https://github.com/wapmorgan/Mp3Info/issues",
+                "source": "https://github.com/wapmorgan/Mp3Info/tree/0.1.0"
+            },
+            "time": "2023-05-28T18:37:15+00:00"
         },
         {
             "name": "webmozart/assert",

@@ -33,14 +33,34 @@ class EventController extends Controller
         // }
 
         $data = collect($request->all())->toArray();
-        $data['user_id'] = Auth::user()->id;
-        $result = Event::create($data);
-        $saved = $this->saveRelated($data, $result);
-        $event = Event::with(['user', 'poster', 'images'])->find($result->id);
+        $userId = Auth::id();
+        $data['user_id'] = $userId;
+        $data['poster_id'] = $userId;
+        $data['poster_type'] = 'user';
+        $event = Event::create($data);
+        $saved = $this->saveRelated($data, $event);
         //create event emmiter or reminder or notifications for those who may be interested
 
+        $event = Event::withCount('comments')
+            ->with(['user', 'poster'])
+            ->with('hierarchies', 'addresses', 'tags', 'images', 'comments', 'churches')
+            ->with(['attendees' => function ($query) {
+                $query->limit(7);
+            }])
+            ->withCount([
+                'attendees',
+                'attendees as attending' => function (Builder $query) use ($userId) {
+                    $query->where('user_id', $userId);
+                },
+            ])
+            ->withCount([
+                'views',
+                'views as viewed' => function (Builder $query) use ($userId) {
+                    $query->where('user_id', $userId);
+                },
+            ])->find($event->id);
 
-        if ($result) {
+        if ($event) {
             return response()->json(['data' => $event], 201);
         } else {
             return response()->json(['data' => false, 'errors' => 'unknown error occured'], 400);
@@ -82,7 +102,8 @@ class EventController extends Controller
         $id = (int) $request->route('id');
         $userId = Auth::user()->id;
         if ($event = Event::withCount('comments')
-            ->with(['comments', 'user', 'churches', 'addresses', 'poster']) // ,'poster'])
+            ->with(['user', 'poster'])
+            ->with('hierarchies', 'addresses', 'tags', 'images', 'comments', 'churches')
             ->with(['attendees' => function ($query) {
                 $query->limit(7);
             }])

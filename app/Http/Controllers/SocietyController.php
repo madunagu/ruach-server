@@ -30,6 +30,8 @@ class SocietyController extends Controller
         $data = collect($request->all())->toArray();
 
         $data['user_id'] = Auth::user()->id;
+        $data['poster_id'] = Auth::user()->id;
+        $data['poster_type'] = 'user';
 
         $result = Society::create($data);
         $saved = $this->saveRelated($data,$result);

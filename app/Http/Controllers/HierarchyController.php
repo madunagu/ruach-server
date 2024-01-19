@@ -15,9 +15,7 @@ class HierarchyController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'rank' => 'nullable|integer',
-            'position_name'=> 'string|max:255',
-            'position_slang' => 'nullable|string|max:255',
-            'person_name' => 'nullable|string|max:255',
+            'name'=> 'string|max:255',
             'user_id' => 'nullable|integer|exists:users,id' //TODO: add required if to this
         ]);
 
@@ -35,6 +33,8 @@ class HierarchyController extends Controller
             return response()->json(['data'=>false,'errors'=>'unknown error occurred'], 400);
         }
     }
+
+    //TODO: create a bulk create method for hierarchies
     public function update(Request $request)
     {
         $validator = Validator::make($request->all(), [

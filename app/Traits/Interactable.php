@@ -5,7 +5,9 @@ namespace App\Traits;
 use App\Http\Controllers\AudioPostController;
 use App\Http\Controllers\ChurchController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\DevotionalController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\PostController;
 use App\Http\Controllers\SocietyController;
 use App\Http\Controllers\VideoPostController;
 use Illuminate\Database\Eloquent\Model;
@@ -18,15 +20,18 @@ trait Interactable
 {
     public  $models = [
         AudioPostController::class => 'audio',
+        VideoPostController::class => 'video',
         ChurchController::class => 'church',
-        CommentController::class => 'comment',
         EventController::class => 'event_invite',
         SocietyController::class => 'society',
-        VideoPostController::class => 'video',
+        PostController::class => 'post',
+        DevotionalController::class => 'devotional',
+        CommentController::class => 'comment',
     ];
 
     function saveRelated(array $data, Model $created = null): array
     {
+        //TODO: check if method exist to avoid obvios errors on these
         if (!empty($data['church_id'])) {
             $created->churches()->attach((int)$data['church_id']);
         }
@@ -36,7 +41,12 @@ trait Interactable
         if (!empty($data['image_ids'])) {
             $created->images()->attach($data['image_ids']);
         }
-
+        if (!empty($data['tag_ids'])) {
+            $created->tags()->attach($data['tag_ids']);
+        }
+        if (!empty($data['hierarchy_ids'])) {
+            $created->hierarchies()->attach($data['hierarchy_ids']);
+        }
         return $data;
     }
 

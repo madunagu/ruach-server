@@ -29,7 +29,9 @@ class CommentController extends Controller
 
         $data = collect($request->all())->toArray();
         $data['user_id'] = Auth::user()->id;
-
+        $data['poster_id'] = Auth::user()->id;
+        $data['poster_type'] = 'user';
+        
         $result = Comment::create($data);
         //TODO: notify relevant users of activity
 

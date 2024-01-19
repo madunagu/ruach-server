@@ -36,6 +36,8 @@ class VideoPost extends Model
         'description',
         'author_id',
         'user_id',
+        'poster_id',
+        'poster_type',
         'size',
         'length',
         'language',
@@ -94,5 +96,16 @@ class VideoPost extends Model
     public function srcs()
     {
         return $this->hasMany(VideoSrc::class, 'video_post_id');
+    }
+
+
+    public function poster()
+    {
+        return $this->morphTo('poster');
+    }
+
+    public function hierarchies()
+    {
+        return $this->morphToMany(Hierarchy::class, 'hierarchyable', 'hierarchyables');
     }
 }

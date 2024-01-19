@@ -17,7 +17,9 @@ use App\Models\AudioPost;
 use App\Models\AudioSrc;
 use App\Traits\Interactable;
 use App\Http\Resources\AudioPostCollection;
-use wapmorgan\Mp3Info\Mp3Info;
+// use wapmorgan\Mp3Info\Mp3Info;
+use wapmorgan\MediaFile\MediaFile;
+// use wapmorgan\MediaFile\Exceptions;
 
 class AudioPostController extends Controller
 {
@@ -49,26 +51,47 @@ class AudioPostController extends Controller
 
         $data = collect($request->all())->toArray();
 
-        $data['user_id'] = Auth::user()->id;
-        $name = time() . '.mp3';
+        $userId = Auth::user()->id;
+        $data['user_id'] = $userId;
+        $data['poster_id'] = $userId;
+        $data['poster_type'] = 'user';
+
         //TODO: parse the audio extension from the base64encoded file
+        $name = time() . '.mp3';
+
         $audio  = base64_decode($request['audio']);
         $fileMoved = Storage::disk('public')->put('audio/full/' . $name, $audio);
         $path = 'audio/full/' . $name;
         $data['src_url'] =  Storage::disk('public')->url($path);
-       
-       
+        $data['size'] = Storage::disk('public')->size($path);
+
+        // This commented out because it works only for multi-part form data
         //  $path = $request->file('audio')->store('public/audio/full');
         //  $data['src_url'] = env('APP_URL').Storage::url($path);
 
         $audio = AudioPost::create($data);
         $interacted = $this->saveRelated($data, $audio);
         //obtain length,size and details of audio
-        // $res = $this->getTrackDetails($audio);
+        $res = $this->getTrackDetails($path);
+        //get lyrics from audio
         // $audio = $this->getTrackFullText($audio);
 
         //TODO: complete later
-        // $src = AudioSrc::create(['refresh_rate' => '20', 'bitrate' => '120', 'src' => $path, 'size' => $res['size'], 'format' => 'mp3', 'audio_post_id' => $audio->id,]);
+        if ($res) {
+            $src = AudioSrc::create(['refresh_rate' => $res['refresh_rate'], 'bitrate' => $res['bitrate'], 'src' => $data['src_url'], 'size' => $data['size'], 'format' => 'mp3', 'audio_post_id' => $audio->id,]);
+        }
+        $audio = AudioPost::with(['srcs', 'comments', 'poster', 'tags', 'images', 'author', 'user', 'churches', 'hierarchies', 'addresses'])
+            ->withCount([
+                'comments',
+                'likes',
+                'likes as liked' => function (Builder $query) use ($userId) {
+                    $query->where('user_id', $userId);
+                },
+                'views',
+                'views as viewed' => function (Builder $query) use ($userId) {
+                    $query->where('user_id', $userId);
+                },
+            ])->find($audio->id);
 
         if ($audio) {
             return response()->json(['data' => $audio], 201);
@@ -77,14 +100,37 @@ class AudioPostController extends Controller
         }
     }
 
-    public function getTrackDetails(AudioPost $audio): array
+    public function getTrackDetails(String $path): array
     {
-        if (!empty($request['audio'])) {
-            $audioInfo = new Mp3Info($request['audio']);
-            $length = $audioInfo->duration;
-            $size = $audioInfo->audioSize;
+        $storagePath = storage_path('app/public/' . $path);
+        try {
+            $media = MediaFile::open($storagePath);
+            // for audio
+            if ($media->isAudio()) {
+                $audio = $media->getAudio();
+                return [
+                    'length' => $audio->getLength(),
+                    'bitrate' => $audio->getBitRate(),
+                    'refresh_rate' => $audio->getSampleRate(),
+                    'channels' => $audio->getChannels(),
+                ];
+            }
+            // for video
+            else {
+                $video = $media->getVideo();
+                // calls to VideoAdapter interface
+                return [
+                    'length' => $video->getLength(),
+                    'dimensions' => $video->getWidth() . 'x' . $video->getHeight(),
+                    'frame_rate' => $video->getFramerate(),
+                ];
+            }
+        } catch (wapmorgan\MediaFile\Exceptions\FileAccessException $e) {
+            // FileAccessException throws when file is not a detected media
+        } catch (wapmorgan\MediaFile\Exceptions\ParsingException $e) {
+            echo 'File is propably corrupted: ' . $e->getMessage() . PHP_EOL;
         }
-        return ['size' => $size, 'length' => $length];
+        print('gettting track details');
     }
 
     public function getTrackFullText(AudioPost $audio): AudioPost
@@ -161,7 +207,8 @@ class AudioPostController extends Controller
     {
         $id = (int)$request->route('id');
         $userId = Auth::user()->id;
-        if ($audio = AudioPost::with(['srcs', 'comments', 'images', 'author', 'user', 'churches', 'addresses'])
+        if ($audio = AudioPost::with(['srcs',  'poster',  'author', 'user'])
+            ->with('hierarchies', 'addresses', 'tags', 'images', 'comments', 'churches')
             ->withCount([
                 'comments',
                 'likes',
@@ -199,7 +246,7 @@ class AudioPostController extends Controller
         }
 
         $query = $request['q'];
-        $audia = AudioPost::with('author', 'user', 'srcs')
+        $audia = AudioPost::with('author', 'user', 'srcs', 'poster')
             ->orderBy('audio_posts.created_at', 'DESC');
         if ($query) {
             $audia = $audia->search($query);

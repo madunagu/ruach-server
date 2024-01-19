@@ -12,6 +12,8 @@ class Post extends Model
         'title',
         'body',
         'user_id',
+        'poster_id',
+        'poster_type',
     ];
 
     public function images()
@@ -29,10 +31,16 @@ class Post extends Model
         return $this->morphTo('poster');
     }
 
+    public function hierarchies()
+    {
+        return $this->morphToMany(Hierarchy::class, 'hierarchyable', 'hierarchyables');
+    }
+
     public function tags()
     {
         return $this->morphToMany(Tag::class, 'taggable');
     }
+
     public function addresses()
     {
         return $this->morphToMany(Address::class, 'addressable', 'addressables');

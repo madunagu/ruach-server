@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Post;
 use App\Traits\Interactable;
 use App\Traits\Orderable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Validator;
 use Illuminate\Http\Request;
@@ -25,6 +26,8 @@ class PostController extends Controller
 
         $data = collect($request->all())->toArray();
         $data['user_id'] = Auth::user()->id;
+        $data['poster_id'] = Auth::user()->id;
+        $data['poster_type'] = 'user';
 
         $result = Post::create($data);
         //TODO: notify relevant users of activity
@@ -70,7 +73,27 @@ class PostController extends Controller
         //         'data' => $address
         //     ], 200);
 
-        if ($post = Post::find($id)) {
+        $userId = Auth::user()->id;
+        if ($post = Post::withCount('comments')
+            ->with(['user', 'poster'])
+            ->with('hierarchies', 'tags', 'images', 'comments', 'churches')
+            ->with(['attendees' => function ($query) {
+                $query->limit(7);
+            }])
+            ->withCount([
+                'comments',
+                'likes',
+                'likes as liked' => function (Builder $query) use ($userId) {
+                    $query->where('user_id', $userId);
+                },
+            ])
+            ->withCount([
+                'views',
+                'views as viewed' => function (Builder $query) use ($userId) {
+                    $query->where('user_id', $userId);
+                },
+            ])->find($id)
+        ) {
             return response()->json([
                 'data' => $post
             ], 200);
@@ -96,7 +119,7 @@ class PostController extends Controller
         $orderParams = $this->orderParams($params);
         $length = (int) (empty($request['perPage']) ? 15 : $request['perPage']);
 
-        $comments = Post::with('user','poster')->withCount('likes')->withCount('comments')->withCount('views')
+        $comments = Post::with('user', 'poster')->withCount('likes')->withCount('comments')->withCount('views')
             ->orderBy('posts.' . $orderParams->order,  $orderParams->direction)
             ->paginate($length);
 

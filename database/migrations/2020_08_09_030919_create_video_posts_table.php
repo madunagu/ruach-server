@@ -18,14 +18,15 @@ class CreateVideoPostsTable extends Migration
             $table->string('name')->nullable();
             $table->string('src_url');
             $table->longText('full_text')->nullable();
-            $table->string('description')->nullable()
-            ;
+            $table->string('description')->nullable();
+            
             $table->integer('author_id')->nullable();
 
             $table->integer('user_id');
             $table->integer('poster_id')->nullable();
             $table->string('poster_type')->nullable();
-
+            $table->integer('hierarchy_group_id')->nullable();
+        
             $table->integer('church_id')->nullable();
             $table->bigInteger('size')->nullable();
             $table->integer('length')->nullable();

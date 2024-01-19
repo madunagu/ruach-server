@@ -36,6 +36,8 @@ class AudioPost extends Model
         'description',
         'author_id',
         'user_id',
+        'poster_id',
+        'poster_type',
         'size',
         'length',
         'language',
@@ -66,6 +68,18 @@ class AudioPost extends Model
     {
         return $this->morphToMany(Tag::class, 'taggable');
     }
+
+    public function hierarchies()
+    {
+        return $this->morphToMany(Hierarchy::class, 'hierarchyable','hierarchyables');
+    }
+
+
+    public function poster()
+    {
+        return $this->morphTo('poster');
+    }
+
 
     public function comments()
     {

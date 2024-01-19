@@ -41,17 +41,23 @@ class VideoPostController extends Controller
         ]);
 
         $data = collect($request->all())->toArray();
-        $data['uploader_id'] = Auth::user()->id;
-        $video  = $request['video'];
+        $data['user_id'] = Auth::user()->id;
+        $data['poster_id'] = Auth::user()->id;
+        $data['poster_type'] = 'user';
+
+        $video  = base64_decode($request['video']);
         // $videoFile = Storage($video);
         //TODO: parse the video extension from the base64encoded file
         $name = time() . '.mp4';
-        $videoPost = VideoPost::create($data);
-        $fileMoved = Storage::put('public/video/full' . $name, $video);
 
-        $pp = '/storage/video/full/' . $name;
-        $data['src_url']= $pp;
-        $src = VideoSrc::create(['src' => $pp, 'quality' => 1, 'size' => 22333, 'video_post_id' => $videoPost->id,]);
+        $fileMoved = Storage::disk('public')->put('video/full/' . $name, $video);
+        $path = 'video/full/' . $name;
+        $data['src_url'] =  Storage::disk('public')->url($path);
+     
+      
+        $videoPost = VideoPost::create($data);
+
+        $src = VideoSrc::create(['src' => $path, 'quality' => 1, 'size' => 22333, 'video_post_id' => $videoPost->id,]);
 
         $interacted = $this->saveRelated($data, $videoPost);
         //TODO: complete feature later

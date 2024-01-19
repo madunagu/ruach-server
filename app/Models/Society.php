@@ -44,7 +44,7 @@ class Society extends Model
 
     public function hierarchies()
     {
-        return $this->morphToMany(Hierarchy::class, 'hierarchyable');
+        return $this->morphToMany(Hierarchy::class, 'hierarchyable', 'hierarchyables');
     }
 
     public function addresses()
@@ -65,5 +65,16 @@ class Society extends Model
     public function likes()
     {
         return $this->morphMany(Like::class, 'likeable');
+    }
+
+
+    public function poster()
+    {
+        return $this->morphTo('poster');
+    }
+
+    public function tags()
+    {
+        return $this->morphToMany(Tag::class, 'taggable');
     }
 }

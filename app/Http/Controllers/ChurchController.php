@@ -37,6 +37,8 @@ class ChurchController extends Controller
 
         $data = collect($request->all())->toArray();
         $data['user_id'] = Auth::user()->id;
+        $data['poster_id'] = Auth::user()->id;
+        $data['poster_type'] = 'user';
         $result = Church::create($data);
 
         $saved = $this->saveRelated($data, $result);
@@ -92,10 +94,8 @@ class ChurchController extends Controller
         $userId = Auth::user()->id;
         $id = (int)$request->route('id');
         if ($church = Church::withCount('comments')
-            ->with('comments')
-            ->with('leader')
-            ->with('user')
-            ->with('addresses')
+            ->with('leader', 'user')
+            ->with('hierarchies', 'addresses', 'images', 'comments')
             ->withCount([
                 'likes',
                 'likes as liked' => function (Builder $query) use ($userId) {

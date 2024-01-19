@@ -11,5 +11,5 @@ class Hierarchy extends Model
 {
     use SoftDeletes, HasFactory;
 
-    protected $fillable = ['rank', 'position_name', 'position_slang', 'hierarchy_tree_id'];
+    protected $fillable = ['rank', 'name', 'user_id'];
 }

@@ -20,6 +20,7 @@ class CreateAudioSrcsTable extends Migration
             $table->string('src');
             $table->integer('size');
             $table->string('format');
+            $table->string('quality')->nullable();
             $table->integer('audio_post_id');
             $table->timestamps();
         });

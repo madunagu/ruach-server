@@ -13,7 +13,7 @@ class Devotional extends Model
 {
     use SearchableTrait, SoftDeletes, HasFactory;
 
-    protected $fillable = ['title', 'opening_prayer', 'closing_prayer', 'body', 'memory_verse', 'day', 'poster_id', 'poster_type','user_id'];
+    protected $fillable = ['title', 'opening_prayer', 'closing_prayer', 'body', 'memory_verse', 'day', 'poster_id', 'poster_type', 'user_id'];
 
     public function images()
     {
@@ -34,6 +34,16 @@ class Devotional extends Model
     public function likes()
     {
         return $this->morphMany(Like::class, 'likeable');
+    }
+
+    public function tags()
+    {
+        return $this->morphToMany(Tag::class, 'taggable');
+    }
+
+    public function hierarchies()
+    {
+        return $this->morphToMany(Hierarchy::class, 'hierarchyable', 'hierarchyables');
     }
 
     public function poster()

@@ -33,7 +33,7 @@ class Event extends Model
     ];
 
     protected $fillable = [
-        'name', 'starting_at', 'ending_at', 'description', 'user_id',
+        'name', 'starting_at', 'ending_at', 'description', 'user_id', 'poster_id', 'poster_type',
     ];
 
     public function addresses()
@@ -43,12 +43,17 @@ class Event extends Model
 
     public function hierarchies()
     {
-        return $this->morphToMany(Hierarchy::class, 'hierarchyable');
+        return $this->morphToMany(Hierarchy::class, 'hierarchyable', 'hierarchyables');
     }
-
+    
     public function poster()
     {
         return $this->morphTo('poster');
+    }
+
+    public function tags()
+    {
+        return $this->morphToMany(Tag::class, 'taggable');
     }
 
     public function attendees()
