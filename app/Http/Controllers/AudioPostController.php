@@ -81,7 +81,7 @@ class AudioPostController extends Controller
         if ($res) {
             $src = AudioSrc::create(['length' => $res['length'],'refresh_rate' => $res['refresh_rate'], 'bitrate' => $res['bitrate'], 'src' => $data['src_url'], 'size' => $data['size'], 'format' => 'mp3', 'audio_post_id' => $audio->id,]);
         }
-        $audio = AudioPost::with(['srcs', 'comments', 'poster', 'tags', 'images', 'author', 'user', 'churches', 'hierarchies', 'addresses'])
+        $audio = AudioPost::with(['srcs', 'comments', 'poster', 'tags', 'images', 'user', 'churches', 'hierarchies', 'addresses'])
             ->withCount([
                 'comments',
                 'likes',
@@ -207,7 +207,7 @@ class AudioPostController extends Controller
     {
         $id = (int)$request->route('id');
         $userId = Auth::user()->id;
-        if ($audio = AudioPost::with(['srcs',  'poster',  'author', 'user'])
+        if ($audio = AudioPost::with(['srcs',  'poster', 'user'])
             ->with('hierarchies', 'addresses', 'tags', 'images', 'comments', 'churches')
             ->withCount([
                 'comments',
@@ -246,7 +246,7 @@ class AudioPostController extends Controller
         }
 
         $query = $request['q'];
-        $audia = AudioPost::with('author', 'user', 'srcs', 'poster')
+        $audia = AudioPost::with('user', 'srcs', 'poster')
             ->orderBy('audio_posts.created_at', 'DESC');
         if ($query) {
             $audia = $audia->search($query);
@@ -269,7 +269,7 @@ class AudioPostController extends Controller
             $audia->orWhere('name', 'like', "%$name%");
             $audia->orWhere('description', 'like', "%$name%");
         }
-        $data = $audia->with('author')
+        $data = $audia->with('hierarchies')
             ->whereNot('audio_posts.id', $audio->id)->paginate();
 
         return response()->json($data);

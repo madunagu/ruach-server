@@ -88,7 +88,7 @@ class VideoPostController extends Controller
             $audia->orWhere('name', 'like', "%$name%");
             $audia->orWhere('description', 'like', "%$name%");
         }
-        $data = $audia->with('author')
+        $data = $audia->with('hierarchies')
             ->whereNot('audio_posts.id', $audio->id)->paginate();
         return response()->json($data);
     }
@@ -166,7 +166,7 @@ class VideoPostController extends Controller
     {
         $id = (int)$request->route('id');
         $userId = Auth::user()->id;
-        if ($audio = VideoPost::with(['srcs', 'comments', 'images', 'author', 'user', 'churches', 'addresses'])
+        if ($audio = VideoPost::with(['srcs', 'comments', 'images', 'user', 'churches', 'addresses'])
             ->withCount([
                 'comments',
                 'likes',
@@ -201,7 +201,7 @@ class VideoPostController extends Controller
         $userId = Auth::id();
 
         $query = $request['q'];
-        $audia = VideoPost::with(['images', 'author', 'user'])
+        $audia = VideoPost::with(['images', 'user'])
             ->withCount([
                 'comments',
                 'likes',
