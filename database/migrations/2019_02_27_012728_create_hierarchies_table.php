@@ -16,13 +16,13 @@ class CreateHierarchiesTable extends Migration
         Schema::create('hierarchies', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->integer('rank')->nullable();
-            $table->string('position_name')->nullable();
-            $table->string('position_slang')->nullable();
-            $table->integer('hierarchy_tree_id')->default(0);
+            $table->string('name')->nullable();
+            // $table->string('position_slang')->nullable();
+            // $table->integer('hierarchy_tree_id')->default(0);
             // $table->string('person_name')->nullable();
-            // $table->integer('user_id')->nullable();
+            $table->integer('user_id')->nullable();
             $table->timestamps();
-            $table->softDeletes();
+            // $table->softDeletes();
         });
     }
 

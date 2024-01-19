@@ -18,19 +18,19 @@ class HierarchySeeder extends Seeder
         Hierarchy::truncate();
         $heirarchies = [[
             'rank' => '1',
-            'position_name'=>'General Overseer',
+            'name'=>'General Overseer',
             // 'person_name'=>' John David',
-            'position_slang'=>'GO'
+            'user_id'=>1
         ],[
             'rank' => '2',
-            'position_name'=>'Assistant Overseer',
+            'name'=>'Assistant Overseer',
             // 'person_name'=>'Owen Kings',
-            'position_slang'=>'AO'
+            'user_id'=>3
         ],[
             'rank' => '3',
-            'position_name'=>'Praise Leader',
+            'name'=>'Praise Leader',
             // 'person_name'=>' Michael Jordan',
-            'position_slang'=>'Lead Singer'
+            'user_id'=>5
         ]];
         Hierarchy::insert($heirarchies);
 

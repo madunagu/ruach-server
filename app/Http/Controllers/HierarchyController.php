@@ -15,7 +15,7 @@ class HierarchyController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'rank' => 'nullable|integer',
-            'name'=> 'string|max:255',
+            'name' => 'string|max:255',
             'user_id' => 'nullable|integer|exists:users,id' //TODO: add required if to this
         ]);
 
@@ -28,9 +28,38 @@ class HierarchyController extends Controller
         //create event emitter or reminder or notifications for those who may be interested
 
         if ($result) {
-            return response()->json(['data'=>true], 201);
+            return response()->json(['data' => true], 201);
         } else {
-            return response()->json(['data'=>false,'errors'=>'unknown error occurred'], 400);
+            return response()->json(['data' => false, 'errors' => 'unknown error occurred'], 400);
+        }
+    }
+
+    public function createMulti(Request $request)
+    {
+        // $validator = Validator::make($request->all(), [
+        //     'rank' => 'nullable|integer',
+        //     'name'=> 'string|max:255',
+        //     'user_id' => 'nullable|integer|exists:users,id' //TODO: add required if to this
+        // ]);
+
+        // if ($validator->fails()) {
+        //     return response()->json($validator->messages(), 422);
+        // }
+
+        $data = collect($request->all())->toArray();
+        // dd($data);
+        $hierarchies= [];
+
+        for ($i = 0; $i < count($data); $i++) {
+            $hierarchies[] = Hierarchy::create($data[$i]);
+        }
+
+        //create event emitter or reminder or notifications for those who may be interested
+
+        if ($hierarchies) {
+            return response()->json(['data' => $hierarchies], 201);
+        } else {
+            return response()->json(['data' => false, 'errors' => 'unknown error occurred'], 400);
         }
     }
 
@@ -41,7 +70,7 @@ class HierarchyController extends Controller
             'id' => 'integer|required|exists:heirarchies,id',
             'hierarchy_group_id' => 'integer|exists:hierarchy_groups,id',
             'rank' => 'nullable|integer',
-            'position_name'=> 'string|max:255',
+            'position_name' => 'string|max:255',
             'position_slang' => 'nullable|string|max:255',
             'person_name' => 'nullable|string|max:255',
             'user_id' => 'nullable|integer|exists:users,id' //TODO: add required if to this
@@ -59,9 +88,9 @@ class HierarchyController extends Controller
 
 
         if ($result) {
-            return response()->json(['data'=>true], 201);
+            return response()->json(['data' => true], 201);
         } else {
-            return response()->json(['data'=>false,'errors'=>'unknown error occured'], 400);
+            return response()->json(['data' => false, 'errors' => 'unknown error occured'], 400);
         }
     }
 
@@ -70,21 +99,21 @@ class HierarchyController extends Controller
         $id = (int)$request->route('id');
         if ($Hierarchy = Hierarchy::find($id)) {
             return response()->json([
-            'data' => $Hierarchy
-        ], 200);
+                'data' => $Hierarchy
+            ], 200);
         } else {
             return response()->json([
-            'data' => false
-        ], 404);
+                'data' => false
+            ], 404);
         }
     }
 
     public function list(Request $request)
     {
         $validator = Validator::make($request->all(), [
-        'q' => 'nullable|string|min:3',
-        'hierarchy_group_id' => 'nullable|integer|exists:hierarchy_groups,id'
-    ]);
+            'q' => 'nullable|string|min:3',
+            'hierarchy_group_id' => 'nullable|integer|exists:hierarchy_groups,id'
+        ]);
         if ($validator->fails()) {
             return response()->json($validator->messages(), 422);
         }
@@ -103,7 +132,7 @@ class HierarchyController extends Controller
         //here insert search parameters and stuff
         $length = (int)(empty($request['perPage']) ? 15 : $request['perPage']);
         $data = $heirarchies->paginate($length);
-       // $data = new EventCollection($events);
+        // $data = new EventCollection($events);
         return response()->json($data);
     }
 
@@ -114,12 +143,12 @@ class HierarchyController extends Controller
         if ($hierarchy = Hierarchy::find($id)) {
             $hierarchy->delete();
             return response()->json([
-            'data' => true
-        ], 200);
+                'data' => true
+            ], 200);
         } else {
             return response()->json([
-            'data' => false
-        ], 404);
+                'data' => false
+            ], 404);
         }
     }
 }
