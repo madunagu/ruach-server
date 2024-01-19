@@ -20,7 +20,6 @@ class CreateVideoPostsTable extends Migration
             $table->longText('full_text')->nullable();
             $table->string('description')->nullable();
             
-            $table->integer('author_id')->nullable();
 
             $table->integer('user_id');
             $table->integer('poster_id')->nullable();

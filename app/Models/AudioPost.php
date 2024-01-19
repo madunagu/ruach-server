@@ -34,7 +34,6 @@ class AudioPost extends Model
         'src_url',
         'full_text',
         'description',
-        'author_id',
         'user_id',
         'poster_id',
         'poster_type',
@@ -47,11 +46,6 @@ class AudioPost extends Model
     public function images()
     {
         return $this->morphToMany(Image::class, 'imageable', 'imageables');
-    }
-
-    public function author()
-    {
-        return $this->belongsTo(User::class, 'author_id');
     }
 
     public function user()

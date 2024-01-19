@@ -9,7 +9,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Hierarchy extends Model
 {
-    use SoftDeletes, HasFactory;
+   use HasFactory;
 
     protected $fillable = ['rank', 'name', 'user_id'];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

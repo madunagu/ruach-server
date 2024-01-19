@@ -48,11 +48,13 @@ class HierarchyController extends Controller
 
         $data = collect($request->all())->toArray();
         // dd($data);
-        $hierarchies= [];
+        $ids = [];
 
         for ($i = 0; $i < count($data); $i++) {
-            $hierarchies[] = Hierarchy::create($data[$i]);
+            $ids[] = Hierarchy::create($data[$i])->id;
         }
+
+        $hierarchies = Hierarchy::with('user')->find($ids);
 
         //create event emitter or reminder or notifications for those who may be interested
 

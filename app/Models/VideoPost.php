@@ -34,7 +34,6 @@ class VideoPost extends Model
         'src_url',
         'full_text',
         'description',
-        'author_id',
         'user_id',
         'poster_id',
         'poster_type',
@@ -53,14 +52,10 @@ class VideoPost extends Model
         return $this->morphToMany(Tag::class,'taggable');
     }
 
-    public function author()
-    {
-        return $this->belongsTo(User::class, 'author_id');
-    }
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'uploader_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function addresses()

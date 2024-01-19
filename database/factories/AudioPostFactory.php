@@ -26,7 +26,6 @@ class AudioPostFactory extends Factory
             'src_url' => Storage::url('audio/Hillsong-Touch-Of-Heaven.mp3'),
             'full_text' => fake()->paragraph,
             'description' => fake()->sentence,
-            'author_id' => 1,
             'user_id' => rand(1, 20),
             'poster_id' => rand(1, 20),
             'poster_type' => 'user',

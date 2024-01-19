@@ -23,7 +23,6 @@ class VideoPostFactory extends Factory
             'src_url' => Storage::url('video/videoplayback.mp4'),
             'full_text' => fake()->paragraph,
             'description' => fake()->sentence,
-            'author_id' => 1,
             'user_id' => rand(1, 10),
             'poster_id' => rand(1, 20),
             'poster_type' => 'user',
