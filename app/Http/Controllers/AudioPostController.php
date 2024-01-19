@@ -69,16 +69,18 @@ class AudioPostController extends Controller
         //  $path = $request->file('audio')->store('public/audio/full');
         //  $data['src_url'] = env('APP_URL').Storage::url($path);
 
+        $res = $this->getTrackDetails($path);
+
+        $data['length'] = round($res['length']);
         $audio = AudioPost::create($data);
         $interacted = $this->saveRelated($data, $audio);
         //obtain length,size and details of audio
-        $res = $this->getTrackDetails($path);
         //get lyrics from audio
         // $audio = $this->getTrackFullText($audio);
 
         //TODO: complete later
         if ($res) {
-            $src = AudioSrc::create(['refresh_rate' => $res['refresh_rate'], 'bitrate' => $res['bitrate'], 'src' => $data['src_url'], 'size' => $data['size'], 'format' => 'mp3', 'audio_post_id' => $audio->id,]);
+            $src = AudioSrc::create(['length' => $res['length'],'refresh_rate' => $res['refresh_rate'], 'bitrate' => $res['bitrate'], 'src' => $data['src_url'], 'size' => $data['size'], 'format' => 'mp3', 'audio_post_id' => $audio->id,]);
         }
         $audio = AudioPost::with(['srcs', 'comments', 'poster', 'tags', 'images', 'author', 'user', 'churches', 'hierarchies', 'addresses'])
             ->withCount([

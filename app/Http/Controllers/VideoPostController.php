@@ -53,11 +53,11 @@ class VideoPostController extends Controller
         $fileMoved = Storage::disk('public')->put('video/full/' . $name, $video);
         $path = 'video/full/' . $name;
         $data['src_url'] =  Storage::disk('public')->url($path);
-     
-      
+
+
         $videoPost = VideoPost::create($data);
 
-        $src = VideoSrc::create(['src' => $path, 'quality' => 1, 'size' => 22333, 'video_post_id' => $videoPost->id,]);
+        $src = VideoSrc::create(['length' => null, 'src' => $path, 'quality' => 1, 'size' => 22333, 'video_post_id' => $videoPost->id,]);
 
         $interacted = $this->saveRelated($data, $videoPost);
         //TODO: complete feature later

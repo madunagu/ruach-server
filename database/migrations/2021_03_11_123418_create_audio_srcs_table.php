@@ -19,6 +19,7 @@ class CreateAudioSrcsTable extends Migration
             $table->integer('bitrate');
             $table->string('src');
             $table->integer('size');
+            $table->integer('length');
             $table->string('format');
             $table->string('quality')->nullable();
             $table->integer('audio_post_id');

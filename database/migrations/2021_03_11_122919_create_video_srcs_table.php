@@ -18,6 +18,7 @@ class CreateVideoSrcsTable extends Migration
             $table->string('src');
             $table->integer('quality');
             $table->integer('size');
+            $table->integer('length');
             $table->string('format');
             $table->integer('video_post_id');
             $table->timestamps();
