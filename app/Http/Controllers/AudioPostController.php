@@ -50,13 +50,13 @@ class AudioPostController extends Controller
         $data = collect($request->all())->toArray();
 
         $data['user_id'] = Auth::user()->id;
-        $audio  = $request['audio'];
-        //TODO: parse the audio extension from the base64encoded file
         $name = time() . '.mp3';
+        //TODO: parse the audio extension from the base64encoded file
+        $audio  = $request['audio'];
         $fileMoved = Storage::disk('public')->put('audio/full/' . $name, $audio);
         $path = 'audio/full/' . $name;
-
-        $data['src_url'] =  Storage::disk('public')->url($path);
+        $data['src_url'] =  Storage::disk('public')->url($fileMoved);
+        
 
         $audio = AudioPost::create($data);
         $interacted = $this->saveRelated($data, $audio);
