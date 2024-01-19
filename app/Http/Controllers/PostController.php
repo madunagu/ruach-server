@@ -77,9 +77,6 @@ class PostController extends Controller
         if ($post = Post::withCount('comments')
             ->with(['user', 'poster'])
             ->with('hierarchies', 'tags', 'images', 'comments', 'churches')
-            ->with(['attendees' => function ($query) {
-                $query->limit(7);
-            }])
             ->withCount([
                 'comments',
                 'likes',
