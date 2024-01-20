@@ -84,9 +84,9 @@ class ImageController extends Controller
         $userId = Auth::user()->id;
         $data = [];
 
-        foreach ($request['photos'] as $photo) {
+        foreach ($request['photos']  as $key => $photo) {
             // $name = time() . '.' . $photo->getClientOriginalExtension();
-            $name = time() . '.jpg';
+            $name = time() . $key . '.jpg';
             Storage::put('public/images/full/' . $name, $photo);
             // $image_resize = ImageManager::make($photo);
             $manager = new ImageManager(
