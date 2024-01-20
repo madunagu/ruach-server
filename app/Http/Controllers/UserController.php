@@ -92,7 +92,7 @@ class UserController extends Controller
         $length = (int) (empty($request['perPage']) ? 15 : $request['perPage']);
         $data = $users->paginate($length);
 
-        return response()->json(compact('data'));
+        return response()->json($data);
     }
 
     public function delete(Request $request)

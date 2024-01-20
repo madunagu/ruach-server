@@ -43,7 +43,7 @@ class FeedController extends Controller
                         },
                     ],
                     Post::class => [
-                        'comments', 'likes', 'views',
+                        'comments', 'likes', 'views','poster',
                         'likes as liked' => function (Builder $query) use ($userId) {
                             $query->where('user_id', $userId);
                         },
