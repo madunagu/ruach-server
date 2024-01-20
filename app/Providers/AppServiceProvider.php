@@ -26,7 +26,7 @@ class AppServiceProvider extends ServiceProvider
             'audio' => 'App\Models\AudioPost',
             'church' => 'App\Models\Church',
             'comment' => 'App\Models\Comment',
-            'event_invite' => 'App\Models\Event',
+            'event' => 'App\Models\Event',
             'info_card' => 'App\Models\InfoCard',
             'like' => 'App\Models\Like',
             'post' => 'App\Models\Post',

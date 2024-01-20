@@ -22,7 +22,7 @@ trait Interactable
         AudioPostController::class => 'audio',
         VideoPostController::class => 'video',
         ChurchController::class => 'church',
-        EventController::class => 'event_invite',
+        EventController::class => 'event',
         SocietyController::class => 'society',
         PostController::class => 'post',
         DevotionalController::class => 'devotional',

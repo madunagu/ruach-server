@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AudioPost;
 use App\Models\Event;
 use App\Models\Feed;
+use App\Models\Post;
 use App\Http\Resources\FeedCollection;
 use App\Models\User;
 use App\Models\VideoPost;
