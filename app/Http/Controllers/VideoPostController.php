@@ -201,7 +201,7 @@ class VideoPostController extends Controller
         $userId = Auth::id();
 
         $query = $request['q'];
-        $audia = VideoPost::with(['images', 'user'])
+        $audia = VideoPost::with(['images', 'user','poster'])
             ->withCount([
                 'comments',
                 'likes',
