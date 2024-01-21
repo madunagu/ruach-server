@@ -58,9 +58,9 @@ class FeedController extends Controller
                 ]);
 
                 $morphTo->morphWith([
-                    AudioPost::class => ['user'],
-                    VideoPost::class => ['user'],
-                    Post::class => ['user'],
+                    AudioPost::class => ['user','poster','srcs'],
+                    VideoPost::class => ['user','poster','srcs'],
+                    Post::class => ['user','poster'],
                     Event::class => ['poster', 'user'],
                 ]);
             }
