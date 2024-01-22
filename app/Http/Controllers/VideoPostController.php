@@ -67,7 +67,8 @@ class VideoPostController extends Controller
 
         $interacted = $this->saveRelated($data, $videoPost);
      
-        $result = VideoPost::with(['srcs', 'comments', 'images', 'user', 'churches', 'addresses'])
+        $result = VideoPost::with(['srcs',  'poster', 'user'])
+        ->with('hierarchies', 'addresses', 'tags', 'images', 'comments', 'churches')
         ->withCount([
             'comments',
             'likes',
