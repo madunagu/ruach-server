@@ -13,6 +13,8 @@ use Google\Cloud\Speech\V1\RecognitionAudio;
 use Google\Cloud\Speech\V1\RecognitionConfig;
 use Google\Cloud\Speech\V1\RecognitionConfig\AudioEncoding;
 
+use wapmorgan\MediaFile\MediaFile;
+
 use App\Models\VideoPost;
 use App\Http\Resources\AudioPostCollection;
 use App\Traits\Interactable;
