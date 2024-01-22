@@ -98,7 +98,7 @@ class VideoPostController extends Controller
                 // calls to VideoAdapter interface
                 return [
                     'length' => $video->getLength(),
-                    'dimensions' => $video->getWidth() . 'x' . $video->getHeight(),
+                    // 'dimensions' => $video->getWidth() . 'x' . $video->getHeight(),
                     'frame_rate' => $video->getFramerate(),
                 ];
             }
