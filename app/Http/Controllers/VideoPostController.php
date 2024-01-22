@@ -42,8 +42,9 @@ class VideoPostController extends Controller
         ]);
 
         $data = collect($request->all())->toArray();
-        $data['user_id'] = Auth::user()->id;
-        $data['poster_id'] = Auth::user()->id;
+        $userId = Auth::id();
+        $data['user_id'] = $userId;
+        $data['poster_id'] = $userId;
         $data['poster_type'] = 'user';
 
         $video  = base64_decode($request['video']);
@@ -65,13 +66,23 @@ class VideoPostController extends Controller
         $src = VideoSrc::create(['length' => $details['length'], 'format' => 'mp4', 'src' => $data['src_url'], 'quality' => 1, 'size' => $data['size'], 'video_post_id' => $videoPost->id,]);
 
         $interacted = $this->saveRelated($data, $videoPost);
-        //TODO: complete feature later
-        //obtain length,size and details of audio
-        // $result = $this->getTrackDetails($videoPost);
-        // $result = $this->getTrackFullText($result);
+     
+        $result = VideoPost::with(['srcs', 'comments', 'images', 'user', 'churches', 'addresses'])
+        ->withCount([
+            'comments',
+            'likes',
+            'likes as liked' => function (Builder $query) use ($userId) {
+                $query->where('user_id', $userId);
+            },
+            'views',
+            'views as viewed' => function (Builder $query) use ($userId) {
+                $query->where('user_id', $userId);
+            },
+        ])
+        ->find($videoPost->id);
 
         if ($videoPost) {
-            return response()->json(['data' => $video], 201);
+            return response()->json(['data' => $result], 201);
         } else {
             return response()->json(['data' => false, 'errors' => 'unknown error occured'], 400);
         }
