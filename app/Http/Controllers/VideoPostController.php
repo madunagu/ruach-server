@@ -52,11 +52,15 @@ class VideoPostController extends Controller
         $fileMoved = Storage::disk('public')->put('video/full/' . $name, $video);
         $path = 'video/full/' . $name;
         $data['src_url'] =  Storage::disk('public')->url($path);
+        $data['size'] = Storage::disk('public')->size($path);
 
+        $details = $this->getTrackDetails($path);
+
+        $data['length']= $details['length'];
 
         $videoPost = VideoPost::create($data);
 
-        $src = VideoSrc::create(['length' => null, 'src' => $path, 'quality' => 1, 'size' => 22333, 'video_post_id' => $videoPost->id,]);
+        $src = VideoSrc::create(['length' => $details['length'], 'format' => 'mp4', 'src' => $data['src_url'], 'quality' => 1, 'size' => $data['siz'], 'video_post_id' => $videoPost->id,]);
 
         $interacted = $this->saveRelated($data, $videoPost);
         //TODO: complete feature later
@@ -71,12 +75,39 @@ class VideoPostController extends Controller
         }
     }
 
-    public function getTrackDetails(VideoPost $video): VideoPost
+    public function getTrackDetails(String $path): array
     {
-        //here use libmp3 to get track details and update it
-        //then return the object back
-        return $video;
+        $storagePath = storage_path('app/public/' . $path);
+        try {
+            $media = MediaFile::open($storagePath);
+            // for audio
+            if ($media->isAudio()) {
+                $audio = $media->getAudio();
+                return [
+                    'length' => $audio->getLength(),
+                    'bitrate' => $audio->getBitRate(),
+                    'refresh_rate' => $audio->getSampleRate(),
+                    'channels' => $audio->getChannels(),
+                ];
+            }
+            // for video
+            else {
+                $video = $media->getVideo();
+                // calls to VideoAdapter interface
+                return [
+                    'length' => $video->getLength(),
+                    'dimensions' => $video->getWidth() . 'x' . $video->getHeight(),
+                    'frame_rate' => $video->getFramerate(),
+                ];
+            }
+        } catch (wapmorgan\MediaFile\Exceptions\FileAccessException $e) {
+            // FileAccessException throws when file is not a detected media
+        } catch (wapmorgan\MediaFile\Exceptions\ParsingException $e) {
+            echo 'File is propably corrupted: ' . $e->getMessage() . PHP_EOL;
+        }
+        print('gettting track details');
     }
+
 
     public function related(Request $request)
     {
@@ -201,7 +232,7 @@ class VideoPostController extends Controller
         $userId = Auth::id();
 
         $query = $request['q'];
-        $audia = VideoPost::with(['images', 'user','poster'])
+        $audia = VideoPost::with(['images', 'user', 'poster'])
             ->withCount([
                 'comments',
                 'likes',
