@@ -16,6 +16,7 @@ use Google\Cloud\Speech\V1\RecognitionConfig\AudioEncoding;
 use App\Models\AudioPost;
 use App\Models\AudioSrc;
 use App\Traits\Interactable;
+use App\Models\Feed;
 use App\Http\Resources\AudioPostCollection;
 // use wapmorgan\Mp3Info\Mp3Info;
 use wapmorgan\MediaFile\MediaFile;
@@ -73,13 +74,16 @@ class AudioPostController extends Controller
         $data['length'] = round($res['length']);
         $audio = AudioPost::create($data);
         $interacted = $this->saveRelated($data, $audio);
+        //for quick use adding feed here, can be removed later
+
+        $feedCreated = Feed::create(['parentable_type' => 'audio', 'postable_type' => 'user', 'postable_id' => $userId, 'parentable_id' => $audio->id]);
         //obtain length,size and details of audio
         //get lyrics from audio
         // $audio = $this->getTrackFullText($audio);
 
         //TODO: complete later
         if ($res) {
-            $src = AudioSrc::create(['length' => $res['length'],'refresh_rate' => $res['refresh_rate'], 'bitrate' => $res['bitrate'], 'src' => $data['src_url'], 'size' => $data['size'], 'format' => 'mp3', 'audio_post_id' => $audio->id,]);
+            $src = AudioSrc::create(['length' => $res['length'], 'refresh_rate' => $res['refresh_rate'], 'bitrate' => $res['bitrate'], 'src' => $data['src_url'], 'size' => $data['size'], 'format' => 'mp3', 'audio_post_id' => $audio->id,]);
         }
         $audio = AudioPost::with(['srcs', 'comments', 'poster', 'tags', 'images', 'user', 'churches', 'hierarchies', 'addresses'])
             ->withCount([
@@ -245,12 +249,37 @@ class AudioPostController extends Controller
             return response()->json($validator->messages(), 422);
         }
 
-        $query = $request['q'];
         $audia = AudioPost::with('user', 'srcs', 'poster')
-            ->orderBy('audio_posts.created_at', 'DESC');
+            ->with('hierarchies', 'addresses', 'tags', 'images', 'comments', 'churches');
+
+        $query = $request['q'];
+        $tag = $request['tag'];
+        $tags = $request['tag_ids'];
+        if ($tag || $tags) {
+            //This code gets only a single tag
+            $auida = $audia->whereHas('tags', function ($query) use ($tag) {
+                $query->where('tag_id', $tag);
+            });
+            //This commented out code gets multiple ids multiple ands
+
+            // foreach ($tags as $value) {
+            //     $audia->whereHas('tags', function ($query) use ($value) {
+            //         $query->where('tag_id', $value);
+            //     });
+            // }
+
+            //this gets tags with multiple ors
+            // $auida = $audia->whereHas('tags', function ($q) use ($tags) {
+            //     $q->whereIn('tag_id', $tags);
+            // });
+        }
+
         if ($query) {
             $audia = $audia->search($query);
         }
+
+        $audia->orderBy('audio_posts.created_at', 'DESC');
+
         //here insert search parameters and stuff
         $length = (int)(empty($request['perPage']) ? 15 : $request['perPage']);
         $audia = $audia->paginate($length);

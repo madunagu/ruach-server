@@ -19,6 +19,7 @@ use App\Models\VideoPost;
 use App\Http\Resources\AudioPostCollection;
 use App\Traits\Interactable;
 use App\Models\VideoSrc;
+use App\Models\Feed;
 
 class VideoPostController extends Controller
 {
@@ -59,28 +60,32 @@ class VideoPostController extends Controller
 
         $details = $this->getTrackDetails($path);
 
-        $data['length']= $details['length'];
+        $data['length'] = $details['length'];
 
         $videoPost = VideoPost::create($data);
+
+        //for quick use adding feed here, can be removed later
+        $feedCreated = Feed::create(['parentable_type' => 'video', 'postable_type' => 'user', 'postable_id' => $userId, 'parentable_id' => $videoPost->id]);
+
 
         $src = VideoSrc::create(['length' => $details['length'], 'format' => 'mp4', 'src' => $data['src_url'], 'quality' => 1, 'size' => $data['size'], 'video_post_id' => $videoPost->id,]);
 
         $interacted = $this->saveRelated($data, $videoPost);
-     
+
         $result = VideoPost::with(['srcs',  'poster', 'user'])
-        ->with('hierarchies', 'addresses', 'tags', 'images', 'comments', 'churches')
-        ->withCount([
-            'comments',
-            'likes',
-            'likes as liked' => function (Builder $query) use ($userId) {
-                $query->where('user_id', $userId);
-            },
-            'views',
-            'views as viewed' => function (Builder $query) use ($userId) {
-                $query->where('user_id', $userId);
-            },
-        ])
-        ->find($videoPost->id);
+            ->with('hierarchies', 'addresses', 'tags', 'images', 'comments', 'churches')
+            ->withCount([
+                'comments',
+                'likes',
+                'likes as liked' => function (Builder $query) use ($userId) {
+                    $query->where('user_id', $userId);
+                },
+                'views',
+                'views as viewed' => function (Builder $query) use ($userId) {
+                    $query->where('user_id', $userId);
+                },
+            ])
+            ->find($videoPost->id);
 
         if ($videoPost) {
             return response()->json(['data' => $result], 201);

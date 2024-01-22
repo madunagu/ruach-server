@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Validator;
 
 use App\Models\Event;
+use App\Models\Feed;
 use App\Http\Resources\EventCollection;
 use App\Traits\Interactable;
 use Illuminate\Support\Facades\DB;
@@ -38,6 +39,10 @@ class EventController extends Controller
         $data['poster_id'] = $userId;
         $data['poster_type'] = 'user';
         $event = Event::create($data);
+        //for quick use adding feed here, can be removed later
+
+        $feedCreated = Feed::create(['parentable_type' => 'event', 'postable_type' => 'user', 'postable_id' => $userId, 'parentable_id' => $event->id]);
+
         $saved = $this->saveRelated($data, $event);
         //create event emmiter or reminder or notifications for those who may be interested
 

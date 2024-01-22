@@ -17,6 +17,7 @@ use App\Http\Controllers\HierarchyTreeController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\SocietyController;
+use App\Http\Controllers\TagController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VideoPostController;
 
@@ -135,4 +136,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/posts/{id}', [PostController::class, 'like']);
 
     Route::get('/feed', [FeedController::class, 'load']);
+
+    Route::get('/tags', [TagController::class, 'list']);
+    Route::post('/tags', [TagController::class, 'create']);
+    Route::put('/tags/{id}', [TagController::class, 'update']);
+    Route::delete('/tags/{id}', [TagController::class, 'delete']);
 });

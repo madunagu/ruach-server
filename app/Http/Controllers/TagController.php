@@ -44,17 +44,20 @@ class TagController extends Controller
 
     public function list(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'q' => 'nullable|string|min:1'
-        ]);
-        if ($validator->fails()) {
-            return response()->json($validator->messages(), 422);
-        }
+        // $validator = Validator::make($request->all(), [
+        //     'q' => 'nullable|string|min:1'
+        // ]);
+        // if ($validator->fails()) {
+        //     return response()->json($validator->messages(), 422);
+        // }
+        $request->validate(['q' => 'nullable|string|min:1']);
 
         $query = $request['q'];
+        
         $tags = Tag::where('id', '>', '1'); //TODO: check if this is a valid condition
         if ($query) {
-            $tags = $tags->search($query);
+            // $tags = $tags->search($query);
+            $tags = Tag::where('tag', 'like', $query);
         }
         $length = (int) (empty($request['perPage']) ? 15 : $request['perPage']);
         $data = $tags->paginate($length);

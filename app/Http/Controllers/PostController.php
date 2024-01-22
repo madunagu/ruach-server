@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Models\Feed;
 use App\Traits\Interactable;
 use App\Traits\Orderable;
 use Illuminate\Database\Eloquent\Builder;
@@ -24,16 +25,37 @@ class PostController extends Controller
             return response()->json($validator->messages(), 422);
         }
 
+        $userId = Auth::id();
         $data = collect($request->all())->toArray();
-        $data['user_id'] = Auth::user()->id;
-        $data['poster_id'] = Auth::user()->id;
+        $data['user_id'] = $userId;
+        $data['poster_id'] =$userId;
         $data['poster_type'] = 'user';
 
-        $result = Post::create($data);
+        $post = Post::create($data);
         //TODO: notify relevant users of activity
+        //for quick use adding feed here, can be removed later
+        $feedCreated = Feed::create(['parentable_type' => 'post', 'postable_type' => 'user', 'postable_id' => $userId, 'parentable_id' => $post->id]);
+
+
+        $result = Post::withCount('comments')
+            ->with(['user', 'poster'])
+            ->with('hierarchies', 'tags', 'images', 'comments', 'churches')
+            ->withCount([
+                'comments',
+                'likes',
+                'likes as liked' => function (Builder $query) use ($userId) {
+                    $query->where('user_id', $userId);
+                },
+            ])
+            ->withCount([
+                'views',
+                'views as viewed' => function (Builder $query) use ($userId) {
+                    $query->where('user_id', $userId);
+                },
+            ])->find($post->id);
 
         if ($result) {
-            return response()->json(['data' => $result], 201);
+            return response()->json(['data' => $post], 201);
         } else {
             return response()->json(['data' => false, 'errors' => 'unknown error occured'], 400);
         }
