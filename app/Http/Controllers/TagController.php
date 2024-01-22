@@ -53,16 +53,17 @@ class TagController extends Controller
         $request->validate(['q' => 'nullable|string|min:1']);
 
         $query = $request['q'];
-        
+
         $tags = Tag::where('id', '>', '1'); //TODO: check if this is a valid condition
-        if ($query) {
+        if ($query) {   
+            
             // $tags = $tags->search($query);
             $tags = Tag::where('tag', 'like', $query);
         }
         $length = (int) (empty($request['perPage']) ? 15 : $request['perPage']);
         $data = $tags->paginate($length);
 
-        return response()->json(compact('data'));
+        return response()->json($data);
     }
 
     public function delete(Request $request)
