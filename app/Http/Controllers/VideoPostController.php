@@ -62,7 +62,7 @@ class VideoPostController extends Controller
 
         $videoPost = VideoPost::create($data);
 
-        $src = VideoSrc::create(['length' => $details['length'], 'format' => 'mp4', 'src' => $data['src_url'], 'quality' => 1, 'size' => $data['siz'], 'video_post_id' => $videoPost->id,]);
+        $src = VideoSrc::create(['length' => $details['length'], 'format' => 'mp4', 'src' => $data['src_url'], 'quality' => 1, 'size' => $data['size'], 'video_post_id' => $videoPost->id,]);
 
         $interacted = $this->saveRelated($data, $videoPost);
         //TODO: complete feature later
