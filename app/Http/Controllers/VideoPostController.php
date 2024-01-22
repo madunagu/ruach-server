@@ -99,7 +99,7 @@ class VideoPostController extends Controller
                 return [
                     'length' => $video->getLength(),
                     // 'dimensions' => $video->getWidth() . 'x' . $video->getHeight(),
-                    'frame_rate' => $video->getFramerate(),
+                    // 'frame_rate' => $video->getFramerate(),
                 ];
             }
         } catch (wapmorgan\MediaFile\Exceptions\FileAccessException $e) {
