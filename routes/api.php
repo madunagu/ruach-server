@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\AudioPostController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\ChurchController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DevotionalController;
@@ -44,8 +45,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::post('/login', [LoginController::class, 'login']);
 
-// Route::post('/register', 'Auth\RegisterController@register');
-
+Route::post('/register', [LoginController::class, 'register']);
 
 
 Route::middleware('auth:sanctum')->group(function () {
