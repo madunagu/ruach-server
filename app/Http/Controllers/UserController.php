@@ -102,7 +102,7 @@ class UserController extends Controller
                 },
             ])
         ) {
-            $user['notification_count'] = Auth::user()->unreadNotifications()->count();
+            // $user['notification_count'] = Auth::user()->unreadNotifications()->count();
             return response()->json([
                 'data' => $user
             ], 200);
