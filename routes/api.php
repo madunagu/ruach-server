@@ -33,9 +33,7 @@ use App\Http\Controllers\VideoPostController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+
 
 
 
@@ -49,6 +47,8 @@ Route::post('/register', [LoginController::class, 'register']);
 
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', [UserController::class, 'user']);
+
     Route::get('/addresses', [AddressController::class, 'list']);
     Route::post('/addresses', [AddressController::class, 'create']);
     Route::get('/addresses/{id}', [AddressController::class, 'get']);

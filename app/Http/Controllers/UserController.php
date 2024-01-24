@@ -52,11 +52,11 @@ class UserController extends Controller
             return response()->json($validator->messages(), 422);
         }
         $id = $request->route('id');
-        $data = $request->only('name','phone','description');
+        $data = $request->only('name', 'phone', 'description');
 
         // $data = collect($request->all())->toArray();
-        $result = User::find($id);
-        $result = $result->update($data);
+        $user = User::find($id);
+        $result = $user->update($data);
         if ($result) {
             return response()->json(['data' => $result], 201);
         } else {
@@ -68,7 +68,38 @@ class UserController extends Controller
     {
         $id = (int)$request->route('id');
 
-        if ($user = User::find($id)) {
+        if ($user = User::find($id)->with('images')
+            ->withCount([
+                'following',
+                'followers',
+                'following as is_following' => function (Builder $query) use ($id) {
+                    $query->where('user_id', $id);
+                },
+            ])
+        ) {
+            return response()->json([
+                'data' => $user
+            ], 200);
+        } else {
+            return response()->json([
+                'data' => false
+            ], 404);
+        }
+    }
+
+    public function user(Request $request)
+    {
+        $id = Auth::id();
+
+        if ($user = User::find($id)->with('images')
+            ->withCount([
+                'following',
+                'followers',
+                'following as is_following' => function (Builder $query) use ($id) {
+                    $query->where('user_id', $id);
+                },
+            ])
+        ) {
             return response()->json([
                 'data' => $user
             ], 200);
@@ -87,7 +118,7 @@ class UserController extends Controller
         if ($validator->fails()) {
             return response()->json($validator->messages(), 422);
         }
-        $userId= Auth::id();
+        $userId = Auth::id();
 
         $query = $request['q'];
         $users = User::where('id', '>', '1')
@@ -99,7 +130,7 @@ class UserController extends Controller
                     $query->where('user_id', $userId);
                 },
             ]);
-             //TODO: check if this is a valid condition
+        //TODO: check if this is a valid condition
         if ($query) {
             $users = $users->search($query);
         }
