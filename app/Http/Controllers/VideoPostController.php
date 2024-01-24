@@ -266,6 +266,8 @@ class VideoPostController extends Controller
         if ($query) {
             $audia = $audia->search($query);
         }
+
+        $audia->orderBy('video_posts.created_at', 'DESC');
         //here insert search parameters and stuff
         $length = (int)(empty($request['perPage']) ? 15 : $request['perPage']);
         $audia = $audia->paginate($length);

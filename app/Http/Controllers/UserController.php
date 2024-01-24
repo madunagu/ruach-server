@@ -41,7 +41,7 @@ class UserController extends Controller
     public function update(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id' => 'integer|required|exists:addresses,id',
+            'id' => 'integer|required|exists:users,id',
             'name' => 'string|required|max:255',
             'email' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:20',
@@ -52,8 +52,9 @@ class UserController extends Controller
             return response()->json($validator->messages(), 422);
         }
         $id = $request->route('id');
+        $data = $request->only('name','phone','description');
 
-        $data = collect($request->all())->toArray();
+        // $data = collect($request->all())->toArray();
         $result = User::find($id);
         $result = $result->update($data);
         if ($result) {
