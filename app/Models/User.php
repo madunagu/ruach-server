@@ -60,6 +60,11 @@ class User extends Authenticatable
         return $this->hasMany(Feed::class, 'poster_id');
     }
 
+    public  function messages()
+    {
+        return $this->hasMany(Messages::class, 'user_id');
+    }
+
     public function infoCard()
     {
         return $this->morphMany(InfoCard::class, 'info_cardable');

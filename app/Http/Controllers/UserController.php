@@ -95,11 +95,14 @@ class UserController extends Controller
             ->withCount([
                 'following',
                 'followers',
+                'messages',
+                'notifications',
                 'following as is_following' => function (Builder $query) use ($id) {
                     $query->where('user_id', $id);
                 },
             ])
         ) {
+            $user['notification_count'] = Auth::user()->unreadNotifications()->count();
             return response()->json([
                 'data' => $user
             ], 200);
