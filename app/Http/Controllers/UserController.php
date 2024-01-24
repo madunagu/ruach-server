@@ -103,9 +103,10 @@ class UserController extends Controller
             ->find($id)
         ) {
             // $user['notification_count'] = Auth::user()->unreadNotifications()->count();
-            return response()->json([
-                'data' => $user
-            ], 200);
+            return response()->json(
+                $user,
+                200
+            );
         } else {
             return response()->json([
                 'data' => false
