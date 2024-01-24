@@ -91,7 +91,7 @@ class UserController extends Controller
     {
         $id = Auth::id();
 
-        if ($user = User::find($id)->with('images')
+        if ($user = User::with(['images'])
             ->withCount([
                 'following',
                 'followers',
@@ -100,6 +100,7 @@ class UserController extends Controller
                     $query->where('user_id', $id);
                 },
             ])
+            ->find($id)
         ) {
             // $user['notification_count'] = Auth::user()->unreadNotifications()->count();
             return response()->json([
