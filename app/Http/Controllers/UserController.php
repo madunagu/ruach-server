@@ -96,7 +96,6 @@ class UserController extends Controller
                 'following',
                 'followers',
                 'messages',
-                'notifications',
                 'following as is_following' => function (Builder $query) use ($id) {
                     $query->where('user_id', $id);
                 },
