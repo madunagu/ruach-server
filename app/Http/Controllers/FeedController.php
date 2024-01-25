@@ -90,8 +90,8 @@ class FeedController extends Controller
         $userId = $user->id;
         $query = $request['q'];
 
-    //    $tags = Tag::with('taggable')->get();
-    //    dd($tags);
+        //    $tags = Tag::with('taggable')->get();
+        //    dd($tags);
         // $following = $user->following()->pluck('user_id');
 
         $feeds = Feed::with([
@@ -132,15 +132,78 @@ class FeedController extends Controller
                 ]);
             }
         ])
-        ->whereHasMorph(
-            'parentable',
-            ['post', 'event', 'audio', 'video'],
-            function (Builder $query, string $type) use ($tag) {
-              $query->whereHas('tags', function ($query) use ($tag) {
-                    $query->where('tag_id', $tag);
-                });
+            ->whereHasMorph(
+                'parentable',
+                ['post', 'event', 'audio', 'video'],
+                function (Builder $query, string $type) use ($tag) {
+                    $query->whereHas('tags', function ($query) use ($tag) {
+                        $query->where('tag_id', $tag);
+                    });
+                }
+            )            // ->whereIn('postable_id', $following)
+            ->orderBy('created_at', 'desc');
+
+        if (!empty($type)) {
+            $feeds = $feeds->where('parentable_type', $type);
+        }
+        $feeds = $feeds->paginate();
+        $result = new FeedCollection($feeds);
+        return response()->json($result);
+    }
+
+    public function profile(Request $request)
+    {
+        $validator = $request->validate([
+            'user_id' => 'integer|required|exists:users,id',
+        ]);
+
+        $profile_id = $request['user_id'];
+        $userId = $user->id;
+        $query = $request['q'];
+
+        //    $tags = Tag::with('taggable')->get();
+        //    dd($tags);
+        // $following = $user->following()->pluck('user_id');
+
+        $feeds = Feed::with([
+            'parentable' => function (MorphTo $morphTo) use ($userId) {
+                $morphTo->morphWithCount([
+                    AudioPost::class => [
+                        'comments', 'likes', 'views',
+                        'likes as liked' => function (Builder $query) use ($userId) {
+                            $query->where('user_id', $userId);
+                        },
+                    ],
+                    VideoPost::class => [
+                        'comments', 'likes', 'views',
+                        'likes as liked' => function (Builder $query) use ($userId) {
+                            $query->where('user_id', $userId);
+                        },
+                    ],
+                    Post::class => [
+                        'comments', 'likes', 'views',
+                        'likes as liked' => function (Builder $query) use ($userId) {
+                            $query->where('user_id', $userId);
+                        },
+                    ],
+                    Event::class => [
+                        'comments', 'attendees',
+                        'attendees as attending' => function (Builder $query) use ($userId) {
+                            $query->where('user_id', $userId);
+                        },
+                        'views'
+                    ],
+                ]);
+
+                $morphTo->morphWith([
+                    AudioPost::class => ['user', 'poster', 'srcs'],
+                    VideoPost::class => ['user', 'poster', 'srcs'],
+                    Post::class => ['user', 'poster'],
+                    Event::class => ['poster', 'user'],
+                ]);
             }
-        )            // ->whereIn('postable_id', $following)
+        ])
+            ->where('postable_id', $profile_id)
             ->orderBy('created_at', 'desc');
 
         if (!empty($type)) {
