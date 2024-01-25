@@ -31,8 +31,9 @@ class CommentController extends Controller
         $data['user_id'] = Auth::user()->id;
         $data['poster_id'] = Auth::user()->id;
         $data['poster_type'] = 'user';
-        
-        $result = Comment::create($data);
+
+        $comment = Comment::create($data);
+        $result = Comment::with('user')->withCount('likes')->find($comment->id);
         //TODO: notify relevant users of activity
 
         if ($result) {
