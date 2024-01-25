@@ -158,7 +158,7 @@ class FeedController extends Controller
         ]);
 
         $profile_id = $request['user_id'];
-        $userId = $user->id;
+        $userId = Auth::id();
         $query = $request['q'];
 
         //    $tags = Tag::with('taggable')->get();
