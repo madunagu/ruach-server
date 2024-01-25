@@ -136,6 +136,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/posts/{id}', [PostController::class, 'like']);
 
     Route::get('/feed', [FeedController::class, 'load']);
+    Route::get('/feed-by-tags', [FeedController::class, 'tags']);
 
     Route::get('/tags', [TagController::class, 'list']);
     Route::post('/tags', [TagController::class, 'create']);
