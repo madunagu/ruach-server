@@ -195,14 +195,30 @@ class VideoPostController extends Controller
             return response()->json($validator->messages(), 422);
         }
 
+        $userId = Auth::id();
         $data = collect($request->all())->toArray();
-        $data['user_id'] = Auth::user()->id;
+        $data['user_id'] =$userId;
         $id = $request->route('id');
-        $result = VideoPost::find($id);
+        $videoPost = VideoPost::find($id);
         //update result
-        $result = $this->getTrackDetails($result);
-        $result = $this->getTrackFullText($result);
-        $result = $result->update($data);
+        // $result = $this->getTrackDetails($result);
+        // $result = $this->getTrackFullText($result);
+
+        $result = $videoPost->update($data);
+        $result = VideoPost::with(['srcs',  'poster', 'user'])
+            ->with('hierarchies', 'addresses', 'tags', 'images', 'comments', 'churches')
+            ->withCount([
+                'comments',
+                'likes',
+                'likes as liked' => function (Builder $query) use ($userId) {
+                    $query->where('user_id', $userId);
+                },
+                'views',
+                'views as viewed' => function (Builder $query) use ($userId) {
+                    $query->where('user_id', $userId);
+                },
+            ])
+            ->find($videoPost->id);
 
 
         if ($result) {

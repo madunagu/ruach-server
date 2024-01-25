@@ -85,8 +85,11 @@ class AudioPostController extends Controller
         if ($res) {
             $src = AudioSrc::create(['length' => $res['length'], 'refresh_rate' => $res['refresh_rate'], 'bitrate' => $res['bitrate'], 'src' => $data['src_url'], 'size' => $data['size'], 'format' => 'mp3', 'audio_post_id' => $audio->id,]);
         }
-        $audio = AudioPost::with(['srcs', 'comments', 'poster', 'tags', 'images', 'user', 'churches', 'hierarchies', 'addresses'])
-            ->withCount([
+        $audio = AudioPost::with(['srcs', 'comments', 'poster', 'tags', 'images', 'user', 'churches', 'addresses'])
+
+            ->with(['hierarchies' => [
+                'user',
+            ]])->withCount([
                 'comments',
                 'likes',
                 'likes as liked' => function (Builder $query) use ($userId) {
@@ -191,13 +194,28 @@ class AudioPostController extends Controller
 
         $data = collect($request->all())->toArray();
         $data['user_id'] = Auth::user()->id;
-
+        $userId = Auth::id();
         $id = $request->route('id');
-        $result = AudioPost::find($id);
-        $details = $this->getTrackDetails($result);
-        $result = $this->getTrackFullText($result);
+        $audio = AudioPost::find($id);
+        // $details = $this->getTrackDetails($result);
+        // $result = $this->getTrackFullText($result);
         //update result
-        $result = $result->update($data);
+        $result = $audio->update($data);
+        $result = AudioPost::with(['srcs', 'comments', 'poster', 'tags', 'images', 'user', 'churches', 'addresses'])
+
+            ->with(['hierarchies' => [
+                'user',
+            ]])->withCount([
+                'comments',
+                'likes',
+                'likes as liked' => function (Builder $query) use ($userId) {
+                    $query->where('user_id', $userId);
+                },
+                'views',
+                'views as viewed' => function (Builder $query) use ($userId) {
+                    $query->where('user_id', $userId);
+                },
+            ])->find($audio->id);
 
 
         if ($result) {
@@ -212,7 +230,10 @@ class AudioPostController extends Controller
         $id = (int)$request->route('id');
         $userId = Auth::user()->id;
         if ($audio = AudioPost::with(['srcs',  'poster', 'user'])
-            ->with('hierarchies', 'addresses', 'tags', 'images', 'comments', 'churches')
+            ->with('addresses', 'tags', 'images', 'comments', 'churches')
+            ->with(['hierarchies' => [
+                'user',
+            ]])
             ->withCount([
                 'comments',
                 'likes',
@@ -250,7 +271,10 @@ class AudioPostController extends Controller
         }
 
         $audia = AudioPost::with('user', 'srcs', 'poster')
-            ->with('hierarchies', 'addresses', 'tags', 'images', 'comments', 'churches');
+            ->with(['hierarchies' => [
+                'user',
+            ]])
+            ->with('addresses', 'tags', 'images', 'comments', 'churches');
 
         $query = $request['q'];
         $tag = $request['tag'];
