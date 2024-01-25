@@ -85,7 +85,7 @@ class AudioPostController extends Controller
         if ($res) {
             $src = AudioSrc::create(['length' => $res['length'], 'refresh_rate' => $res['refresh_rate'], 'bitrate' => $res['bitrate'], 'src' => $data['src_url'], 'size' => $data['size'], 'format' => 'mp3', 'audio_post_id' => $audio->id,]);
         }
-        $audio = AudioPost::with(['srcs', 'comments', 'poster', 'tags', 'images', 'user', 'churches', 'addresses'])
+        $audio = AudioPost::with(['srcs',  'poster', 'tags', 'images', 'user', 'churches', 'addresses'])
 
             ->with(['hierarchies' => [
                 'user',
@@ -201,7 +201,7 @@ class AudioPostController extends Controller
         // $result = $this->getTrackFullText($result);
         //update result
         $result = $audio->update($data);
-        $result = AudioPost::with(['srcs', 'comments', 'poster', 'tags', 'images', 'user', 'churches', 'addresses'])
+        $result = AudioPost::with(['srcs',  'poster', 'tags', 'images', 'user', 'churches', 'addresses'])
 
             ->with(['hierarchies' => [
                 'user',
@@ -230,7 +230,7 @@ class AudioPostController extends Controller
         $id = (int)$request->route('id');
         $userId = Auth::user()->id;
         if ($audio = AudioPost::with(['srcs',  'poster', 'user'])
-            ->with('addresses', 'tags', 'images', 'comments', 'churches')
+            ->with('addresses', 'tags', 'images',  'churches')
             ->with(['hierarchies' => [
                 'user',
             ]])
@@ -274,7 +274,7 @@ class AudioPostController extends Controller
             ->with(['hierarchies' => [
                 'user',
             ]])
-            ->with('addresses', 'tags', 'images', 'comments', 'churches');
+            ->with('addresses', 'tags', 'images', 'churches');
 
         $query = $request['q'];
         $tag = $request['tag'];

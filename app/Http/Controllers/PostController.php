@@ -39,7 +39,7 @@ class PostController extends Controller
 
         $result = Post::withCount('comments')
             ->with(['user', 'poster'])
-            ->with('hierarchies', 'tags', 'images', 'comments', 'churches')
+            ->with('hierarchies', 'tags', 'images',  'churches')
             ->withCount([
                 'comments',
                 'likes',
@@ -98,7 +98,7 @@ class PostController extends Controller
         $userId = Auth::user()->id;
         if ($post = Post::withCount('comments')
             ->with(['user', 'poster'])
-            ->with('hierarchies', 'tags', 'images', 'comments', 'churches')
+            ->with('hierarchies', 'tags', 'images',  'churches')
             ->withCount([
                 'comments',
                 'likes',

@@ -80,7 +80,7 @@ class DevotionalController extends Controller
         $id = (int) $request->route('id');
         $userId = Auth::user()->id;
         if ($event = Devotional::withCount('comments')
-            ->with(['comments', 'poster', 'churches'])
+            ->with([ 'poster', 'churches'])
             ->with(['devotees' => function ($query) {
                 $query->limit(7);
             }])

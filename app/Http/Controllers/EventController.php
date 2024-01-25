@@ -48,7 +48,7 @@ class EventController extends Controller
 
         $event = Event::withCount('comments')
             ->with(['user', 'poster'])
-            ->with('hierarchies', 'addresses', 'tags', 'images', 'comments', 'churches')
+            ->with('hierarchies', 'addresses', 'tags', 'images',  'churches')
             ->with(['attendees' => function ($query) {
                 $query->limit(7);
             }])
@@ -108,7 +108,7 @@ class EventController extends Controller
         $userId = Auth::user()->id;
         if ($event = Event::withCount('comments')
             ->with(['user', 'poster'])
-            ->with('hierarchies', 'addresses', 'tags', 'images', 'comments', 'churches')
+            ->with('hierarchies', 'addresses', 'tags', 'images',  'churches')
             ->with(['attendees' => function ($query) {
                 $query->limit(7);
             }])
