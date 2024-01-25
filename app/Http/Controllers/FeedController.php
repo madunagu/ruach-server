@@ -27,6 +27,7 @@ class FeedController extends Controller
         $user = Auth::user();
         $userId = $user->id;
         $following = $user->following()->pluck('user_id');
+        $following[] = 1;
 
         $feeds = Feed::with([
             'parentable' => function (MorphTo $morphTo) use ($userId) {

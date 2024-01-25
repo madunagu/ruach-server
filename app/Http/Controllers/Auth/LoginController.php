@@ -68,39 +68,4 @@ class LoginController extends Controller
         return response()->json(['success' => false, 'error' => 'incorrect username or password'], 401);
     }
 
-
-    public function register(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->messages(), 422);
-        }
-        // $request->validate([
-        //     'name' => ['required', 'string', 'max:255'],
-        //     // 'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-        //     // 'password' => ['required', 'string', 'min:8', 'confirmed'],
-        // ]);
-
-        $data = $request->only('name', 'email', 'password');
-        $data = $request->all();
-
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-        ]);
-
-        $token = $user->createToken('devotion');
-
-        return response()->json([
-            'user' => $user,
-            'token' => $token->plainTextToken,
-            'success' => true
-        ], 200);
-    }
 }

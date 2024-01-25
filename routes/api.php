@@ -43,7 +43,7 @@ use App\Http\Controllers\VideoPostController;
 
 Route::post('/login', [LoginController::class, 'login']);
 
-Route::post('/register', [LoginController::class, 'register']);
+Route::post('/register', [RegisterController::class, 'register']);
 
 
 Route::middleware('auth:sanctum')->group(function () {
