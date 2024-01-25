@@ -6,6 +6,7 @@ use App\Models\AudioPost;
 use App\Models\Event;
 use App\Models\Feed;
 use App\Models\Post;
+use App\Models\Tag;
 use App\Http\Resources\FeedCollection;
 use App\Models\User;
 use App\Models\VideoPost;
@@ -83,12 +84,14 @@ class FeedController extends Controller
         $validator = $request->validate([
             'tag' => 'integer|required|exists:tags,id',
         ]);
-        // $type = $request['type'];
-        // if (!empty($type) && !in_array($type, ['audio', 'video', 'post', 'event'])) {
-        //     return response()->json('invalid feed type', 422);
-        // }
+
+        $tag = $request['tag'];
         $user = Auth::user();
         $userId = $user->id;
+        $query = $request['q'];
+
+    //    $tags = Tag::with('taggable')->get();
+    //    dd($tags);
         // $following = $user->following()->pluck('user_id');
 
         $feeds = Feed::with([
@@ -129,9 +132,17 @@ class FeedController extends Controller
                 ]);
             }
         ])
-
-            // ->whereIn('postable_id', $following)
+        ->whereHasMorph(
+            'parentable',
+            ['post', 'event', 'audio', 'video'],
+            function (Builder $query, string $type) use ($tag) {
+              $query->whereHas('tags', function ($query) use ($tag) {
+                    $query->where('tag_id', $tag);
+                });
+            }
+        )            // ->whereIn('postable_id', $following)
             ->orderBy('created_at', 'desc');
+
         if (!empty($type)) {
             $feeds = $feeds->where('parentable_type', $type);
         }

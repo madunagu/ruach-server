@@ -281,9 +281,11 @@ class AudioPostController extends Controller
         $tags = $request['tag_ids'];
         if ($tag || $tags) {
             //This code gets only a single tag
-            $auida = $audia->whereHas('tags', function ($query) use ($tag) {
-                $query->where('tag_id', $tag);
-            });
+            if ($tag) {
+                $audia = $audia->whereHas('tags', function ($query) use ($tag) {
+                    $query->where('tag_id', $tag);
+                });
+            }
             //This commented out code gets multiple ids multiple ands
 
             // foreach ($tags as $value) {
