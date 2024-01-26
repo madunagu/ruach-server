@@ -19,8 +19,8 @@ class CommentController extends Controller
         $validator = Validator::make($request->all(), [
             'comment' => 'string|required',
             'parent_id' => 'nullable|numeric|max:255',
-            'commentable_id' => 'numeric',
-            'commentable_type' => 'string|max:255',
+            'commentable_id' => 'required|numeric',
+            'commentable_type' => 'required|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -98,11 +98,15 @@ class CommentController extends Controller
         $validator = Validator::make($request->all(), [
             'q' => 'nullable|string|min:1',
             'o' => 'nullable|string|min:1',
-            'd' => 'nullable|string|min:1'
+            'd' => 'nullable|string|min:1',
+            'commentable_id' => 'required',
+            'commentable_type' => 'required'
         ]);
         if ($validator->fails()) {
             return response()->json($validator->messages(), 422);
         }
+        $commentable_id = $request['commentable_id'];
+        $commentable_type = $request['commentable_type'];
 
         $params = $data = collect($request->all())->toArray();
         $orderParams = $this->orderParams($params);
@@ -110,6 +114,8 @@ class CommentController extends Controller
 
         $comments = Comment::with('user')->withCount('likes')
             ->orderBy('comments.' . $orderParams->order,  $orderParams->direction)
+            ->where('commentable_id', $commentable_id)
+            ->where('commentable_type', $commentable_type)
             ->paginate($length);
 
         return response()->json($comments);
