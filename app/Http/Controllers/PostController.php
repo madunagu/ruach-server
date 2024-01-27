@@ -96,8 +96,7 @@ class PostController extends Controller
         //     ], 200);
 
         $userId = Auth::user()->id;
-        if ($post = Post::withCount('comments')
-            ->with(['user', 'poster'])
+        if ($post = Post::with(['user', 'poster'])
             ->with('hierarchies', 'tags', 'images',  'churches')
             ->withCount([
                 'comments',

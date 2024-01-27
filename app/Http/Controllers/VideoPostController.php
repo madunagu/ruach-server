@@ -232,7 +232,7 @@ class VideoPostController extends Controller
     {
         $id = (int)$request->route('id');
         $userId = Auth::user()->id;
-        if ($audio = VideoPost::with(['srcs', 'comments', 'images', 'user', 'churches', 'addresses'])
+        if ($audio = VideoPost::with(['srcs', 'images', 'user', 'churches', 'addresses'])
             ->withCount([
                 'comments',
                 'likes',

@@ -6,6 +6,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Validator;
 use App\Models\User;
+use App\Models\Image;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -29,10 +30,12 @@ class UserController extends Controller
 
         $data = collect($request->all())->toArray();
 
+        $data['avatar'] = "https://gravatar.com/avatar/" .   hash('sha256', strtolower(trim($data['email'])));
         $result = User::create($data);
 
         if ($result) {
-            return response()->json(['data' => $result], 201);
+            return
+                response()->json(['data' => $result], 201);
         } else {
             return response()->json(['data' => false, 'errors' => 'unknown error occured'], 400);
         }
@@ -56,7 +59,24 @@ class UserController extends Controller
 
         // $data = collect($request->all())->toArray();
         $user = User::find($id);
+
+        if (!empty($data['image_ids'])) {
+            $user->images()->attach($data['image_ids']);
+            $data['avatar'] = Image::find($data['image_ids'][0])->small;
+        }
+
+
         $result = $user->update($data);
+        $result = User::with(['images'])->withCount([
+            'following',
+            'likes',
+            'followers',
+            'messages',
+            'following as is_following' => function (Builder $query) use ($id) {
+                $query->where('user_id', $id);
+            },
+        ])->find($id);
+
         if ($result) {
             return response()->json(['data' => $result], 201);
         } else {
@@ -71,10 +91,12 @@ class UserController extends Controller
         if ($user = User::find($id)->with('images')
             ->withCount([
                 'following',
+                'likes',
                 'followers',
+                'messages',
                 'following as is_following' => function (Builder $query) use ($id) {
                     $query->where('user_id', $id);
-                },
+                },    
             ])
         ) {
             return response()->json([
@@ -94,6 +116,7 @@ class UserController extends Controller
         if ($user = User::with(['images'])
             ->withCount([
                 'following',
+                'likes',
                 'followers',
                 'messages',
                 'following as is_following' => function (Builder $query) use ($id) {

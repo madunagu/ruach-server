@@ -83,6 +83,10 @@ class RegisterController extends Controller
         $this->guard()->login($user);
 
         $token = $user->createToken('devotion');
+        
+        $user->avatar = "https://gravatar.com/avatar/" .   hash('sha256', strtolower(trim($user->email)));
+        $user->save();
+
 
         if ($response = $this->registered($request, $user)) {
             return $response;
