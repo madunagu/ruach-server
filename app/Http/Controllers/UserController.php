@@ -88,7 +88,7 @@ class UserController extends Controller
     {
         $id = (int)$request->route('id');
 
-        if ($user = User::find($id)->with('images','following')
+        if ($user = User::find($id)->with('images')
             ->withCount([
                 'following',
                 'likes',
