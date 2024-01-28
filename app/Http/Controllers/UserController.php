@@ -96,7 +96,7 @@ class UserController extends Controller
                 'messages',
                 'following as is_following' => function (Builder $query) use ($id) {
                     $query->where('user_id', $id);
-                },    
+                },
             ])
         ) {
             return response()->json([
@@ -159,7 +159,7 @@ class UserController extends Controller
             ]);
         //TODO: check if this is a valid condition
         if ($query) {
-            $users = $users->search($query);
+            $users = $users->where('name', 'like', '%' . $query . '%');
         }
         $length = (int) (empty($request['perPage']) ? 15 : $request['perPage']);
         $data = $users->paginate($length);

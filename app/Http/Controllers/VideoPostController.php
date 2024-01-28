@@ -179,7 +179,7 @@ class VideoPostController extends Controller
     public function update(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id' => 'integer|required|exists:audio_posts,id',
+            'id' => 'integer|required|exists:video_posts,id',
             'name' => 'string|required|max:255',
             // 'src_url' => 'string|required|max:255',
             'full_text' => 'nullable|string',
