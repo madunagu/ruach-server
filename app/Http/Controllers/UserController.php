@@ -72,7 +72,7 @@ class UserController extends Controller
             'likes',
             'followers',
             'messages',
-            'following as is_following' => function (Builder $query) use ($id) {
+            'followers as is_following' => function (Builder $query) use ($id) {
                 $query->where('user_id', $id);
             },
         ])->find($id);
@@ -88,16 +88,16 @@ class UserController extends Controller
     {
         $id = (int)$request->route('id');
 
-        if ($user = User::find($id)->with('images')
+        if ($user = User::find($id)->with('images','following')
             ->withCount([
                 'following',
                 'likes',
                 'followers',
                 'messages',
-                'following as is_following' => function (Builder $query) use ($id) {
+                'followers as is_following' => function (Builder $query) use ($id) {
                     $query->where('user_id', $id);
                 },
-            ])
+            ])->find($id)
         ) {
             return response()->json([
                 'data' => $user
@@ -119,7 +119,7 @@ class UserController extends Controller
                 'likes',
                 'followers',
                 'messages',
-                'following as is_following' => function (Builder $query) use ($id) {
+                'followers as is_following' => function (Builder $query) use ($id) {
                     $query->where('user_id', $id);
                 },
             ])
@@ -154,7 +154,7 @@ class UserController extends Controller
             ->withCount([
                 'following',
                 'followers',
-                'following as is_following' => function (Builder $query) use ($userId) {
+                'followers as is_following' => function (Builder $query) use ($userId) {
                     $query->where('user_id', $userId);
                 },
             ]);
@@ -185,5 +185,21 @@ class UserController extends Controller
                 'data' => false
             ], 404);
         }
+    }
+
+    public function follow(Request $request)
+    {
+
+        $userToFollowId = $request->route('id');
+        $tog = $request['value'];
+        $myUserId = Auth::id();
+        $userToFollow = User::find((int)$userToFollowId);
+        if ($tog) {
+            $userToFollow->followers()->attach($myUserId);
+            return response()->json(['data' => true]);
+        }
+        //IF the  request is to unfollow
+        $userToFollow->followers()->detach($myUserId);
+        return response()->json(['data' => false]);
     }
 }

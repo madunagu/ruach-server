@@ -148,12 +148,15 @@ class EventController extends Controller
         $query = $request['q'];
         $events = Event::with('user')->with(['attendees' => function ($query) {
             $query->limit(7);
-        }])->withCount([
-            'attendees',
-            'attendees as attending' => function (Builder $query) use ($userId) {
-                $query->where('user_id', $userId);
-            },
-        ])
+        }])
+            ->with(['hierarchies' => [
+                'user',
+            ]])->withCount([
+                'attendees',
+                'attendees as attending' => function (Builder $query) use ($userId) {
+                    $query->where('user_id', $userId);
+                },
+            ])
             ->orderBy('created_at', 'DESC'); //TODO: add participants to the search using heirarchies
         if (!empty($query)) {
             $events = $events->search($query);

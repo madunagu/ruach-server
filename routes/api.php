@@ -120,6 +120,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users/{id}',  [UserController::class, 'get']);
     Route::put('/users/{id}',  [UserController::class, 'update']);
     Route::delete('/users/{id}',  [UserController::class, 'delete']);
+    Route::post('/users/{id}',  [UserController::class, 'follow']);
 
     Route::get('/comments',  [CommentController::class, 'list']);
     Route::post('/comments',  [CommentController::class, 'create']);
