@@ -148,6 +148,7 @@ class UserController extends Controller
         $userId = Auth::id();
 
         $query = $request['q'];
+        $order = $request['o'];
         $users = User::where('id', '>', '1')
             ->with('images')
             ->withCount([
@@ -160,6 +161,10 @@ class UserController extends Controller
         //TODO: check if this is a valid condition
         if ($query) {
             $users = $users->where('name', 'like', '%' . $query . '%');
+        }
+        if($order=='name'){
+            $users = $users->orderBy('name');
+          
         }
         $length = (int) (empty($request['perPage']) ? 15 : $request['perPage']);
         $data = $users->paginate($length);
