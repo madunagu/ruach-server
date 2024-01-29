@@ -197,7 +197,7 @@ class VideoPostController extends Controller
 
         $userId = Auth::id();
         $data = collect($request->all())->toArray();
-        $data['user_id'] =$userId;
+        $data['user_id'] = $userId;
         $id = $request->route('id');
         $videoPost = VideoPost::find($id);
         //update result
@@ -232,7 +232,7 @@ class VideoPostController extends Controller
     {
         $id = (int)$request->route('id');
         $userId = Auth::user()->id;
-        if ($audio = VideoPost::with(['srcs', 'images', 'user', 'churches', 'addresses','poster'])
+        if ($audio = VideoPost::with(['srcs', 'images', 'user', 'churches', 'addresses', 'poster'])
             ->withCount([
                 'comments',
                 'likes',
@@ -279,6 +279,15 @@ class VideoPostController extends Controller
                     $query->where('user_id', $userId);
                 },
             ]);
+        $tag = $request['tag'];
+        if ($tag) {
+            //This code gets only a single tag
+            if ($tag) {
+                $audia = $audia->whereHas('tags', function ($query) use ($tag) {
+                    $query->where('tag_id', $tag);
+                });
+            }
+        }
         if ($query) {
             $audia = $audia->search($query);
         }
