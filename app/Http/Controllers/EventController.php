@@ -97,23 +97,23 @@ class EventController extends Controller
         $result = $event->update($data);
 
         $result = Event::withCount('comments')
-        ->with(['user', 'poster'])
-        ->with('hierarchies', 'addresses', 'tags', 'images',  'churches')
-        ->with(['attendees' => function ($query) {
-            $query->limit(7);
-        }])
-        ->withCount([
-            'attendees',
-            'attendees as attending' => function (Builder $query) use ($userId) {
-                $query->where('user_id', $userId);
-            },
-        ])
-        ->withCount([
-            'views',
-            'views as viewed' => function (Builder $query) use ($userId) {
-                $query->where('user_id', $userId);
-            },
-        ])->find($event->id);
+            ->with(['user', 'poster'])
+            ->with('hierarchies', 'addresses', 'tags', 'images',  'churches')
+            ->with(['attendees' => function ($query) {
+                $query->limit(7);
+            }])
+            ->withCount([
+                'attendees',
+                'attendees as attending' => function (Builder $query) use ($userId) {
+                    $query->where('user_id', $userId);
+                },
+            ])
+            ->withCount([
+                'views',
+                'views as viewed' => function (Builder $query) use ($userId) {
+                    $query->where('user_id', $userId);
+                },
+            ])->find($event->id);
 
         if ($result) {
             return response()->json(['data' => $result], 201);
@@ -126,13 +126,15 @@ class EventController extends Controller
     {
         $id = (int) $request->route('id');
         $userId = Auth::user()->id;
-        if ($event = Event::withCount('comments')
-            ->with(['user', 'poster'])
-            ->with('hierarchies', 'addresses', 'tags', 'images',  'churches')
+        if ($event = Event::with(['user', 'poster'])
+            ->with(['hierarchies' => [
+                'user',
+            ]])->with('addresses', 'tags', 'images',  'churches')
             ->with(['attendees' => function ($query) {
                 $query->limit(7);
             }])
             ->withCount([
+                'comments',
                 'attendees',
                 'attendees as attending' => function (Builder $query) use ($userId) {
                     $query->where('user_id', $userId);
@@ -166,7 +168,7 @@ class EventController extends Controller
 
         $userId = Auth::id();
         $query = $request['q'];
-        $events = Event::with('user')->with(['attendees' => function ($query) {
+        $events = Event::with('user', 'images')->with(['attendees' => function ($query) {
             $query->limit(7);
         }])
             ->with(['hierarchies' => [
