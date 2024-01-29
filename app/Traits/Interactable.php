@@ -32,6 +32,7 @@ trait Interactable
     function saveRelated(array $data, Model $created = null): array
     {
         //TODO: check if method exist to avoid obvios errors on these
+        //TODO: remove previous relationships before adding new
         if (!empty($data['church_id'])) {
             $created->churches()->attach((int)$data['church_id']);
         }

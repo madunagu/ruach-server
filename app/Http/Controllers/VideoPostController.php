@@ -203,7 +203,7 @@ class VideoPostController extends Controller
         //update result
         // $result = $this->getTrackDetails($result);
         // $result = $this->getTrackFullText($result);
-
+        $interacted = $this->saveRelated($data, $videoPost);
         $result = $videoPost->update($data);
         $result = VideoPost::with(['srcs',  'poster', 'user'])
             ->with('hierarchies', 'addresses', 'tags', 'images',  'churches')

@@ -59,7 +59,7 @@ class UserController extends Controller
 
         // $data = collect($request->all())->toArray();
         $user = User::find($id);
-
+  
         if (!empty($data['image_ids'])) {
             $user->images()->attach($data['image_ids']);
             $data['avatar'] = Image::find($data['image_ids'][0])->small;

@@ -201,6 +201,8 @@ class AudioPostController extends Controller
         // $result = $this->getTrackFullText($result);
         //update result
         $result = $audio->update($data);
+        $interacted = $this->saveRelated($data, $audio);
+  
         $result = AudioPost::with(['srcs',  'poster', 'tags', 'images', 'user', 'churches', 'addresses'])
 
             ->with(['hierarchies' => [

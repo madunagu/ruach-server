@@ -65,6 +65,8 @@ class DevotionalController extends Controller
         $id = $request->route('id');
         $result = Devotional::find($id);
         //update result
+        $interacted = $this->saveRelated($data, $result);
+  
         $result = $result->update($data);
 
 

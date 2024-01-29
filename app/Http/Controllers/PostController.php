@@ -32,6 +32,8 @@ class PostController extends Controller
         $data['poster_type'] = 'user';
 
         $post = Post::create($data);
+        $interacted = $this->saveRelated($data, $post);
+  
         //TODO: notify relevant users of activity
         //for quick use adding feed here, can be removed later
         $feedCreated = Feed::create(['parentable_type' => 'post', 'postable_type' => 'user', 'postable_id' => $userId, 'parentable_id' => $post->id]);
@@ -77,7 +79,8 @@ class PostController extends Controller
         $data = collect($request->all())->toArray();
         $data['user_id'] = Auth::user()->id;
         $result = Post::find($id);
-
+        $interacted = $this->saveRelated($data, $result);
+  
         $result = $result->update($data);
         if ($result) {
             return response()->json(['data' => true], 201);

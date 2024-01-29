@@ -25,7 +25,6 @@ class EventController extends Controller
             'church_id' => 'nullable|integer|exists:churches,id',
             'starting_at' => 'nullable|date',
             'ending_at' => 'nullable|date',
-            'address_id' => 'nullable|integer|exists:addresses,id',
             'hierarchy_group_id' => 'nullable|integer|exists:hierarchy_groups,id',
         ]);
 
@@ -77,23 +76,44 @@ class EventController extends Controller
         $request->validate([
             'id' => 'integer|required|exists:events,id',
             'name' => 'string|required|max:255',
-            'church_id' => 'nullable|integer|exists:churches,id',
+            // 'church_id' => 'nullable|integer|exists:churches,id',
             'starting_at' => 'nullable|date',
             'ending_at' => 'nullable|date',
-            'address_id' => 'nullable|integer|exists:addresses,id',
+            // 'address_id' => 'nullable|integer|exists:addresses,id',
             'hierarchy_group_id' => 'nullable|integer|exists:hierarchy_groups,id',
         ]);
 
         // if ($validator->fails()) {
         //     return response()->json($validator->messages(), 422);
         // }
+        $userId = Auth::id();
         $data = collect($request->all())->toArray();
-        $data['user_id'] = Auth::user()->id;
+        $data['user_id'] = $userId;
         $id = $request->route('id');
-        $result = Event::find($id);
-        //update result
-        $result = $result->update($data);
+        $event = Event::find($id);
 
+        $interacted = $this->saveRelated($data, $event);
+        //update result
+        $result = $event->update($data);
+
+        $result = Event::withCount('comments')
+        ->with(['user', 'poster'])
+        ->with('hierarchies', 'addresses', 'tags', 'images',  'churches')
+        ->with(['attendees' => function ($query) {
+            $query->limit(7);
+        }])
+        ->withCount([
+            'attendees',
+            'attendees as attending' => function (Builder $query) use ($userId) {
+                $query->where('user_id', $userId);
+            },
+        ])
+        ->withCount([
+            'views',
+            'views as viewed' => function (Builder $query) use ($userId) {
+                $query->where('user_id', $userId);
+            },
+        ])->find($event->id);
 
         if ($result) {
             return response()->json(['data' => $result], 201);
