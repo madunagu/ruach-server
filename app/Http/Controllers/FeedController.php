@@ -74,7 +74,8 @@ class FeedController extends Controller
         if (!empty($type)) {
             $feeds = $feeds->where('parentable_type', $type);
         }
-        $feeds = $feeds->paginate();
+        $length = (int)(empty($request['perPage']) ? 15 : $request['perPage']);
+        $feeds = $feeds->paginate($length);
         $result = new FeedCollection($feeds);
         return response()->json($result);
     }
@@ -146,7 +147,8 @@ class FeedController extends Controller
         if (!empty($type)) {
             $feeds = $feeds->where('parentable_type', $type);
         }
-        $feeds = $feeds->paginate();
+        $length = (int)(empty($request['perPage']) ? 15 : $request['perPage']);
+        $feeds = $feeds->paginate($length);
         $result = new FeedCollection($feeds);
         return response()->json($result);
     }
@@ -209,7 +211,9 @@ class FeedController extends Controller
         if (!empty($type)) {
             $feeds = $feeds->where('parentable_type', $type);
         }
-        $feeds = $feeds->paginate();
+        $length = (int)(empty($request['perPage']) ? 15 : $request['perPage']);
+   
+        $feeds = $feeds->paginate($length);
         $result = new FeedCollection($feeds);
         return response()->json($result);
     }
