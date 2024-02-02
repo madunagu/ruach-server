@@ -6,6 +6,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Validator;
 use App\Models\User;
+use App\Models\Event;
 use App\Models\Image;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
@@ -59,7 +60,7 @@ class UserController extends Controller
 
         // $data = collect($request->all())->toArray();
         $user = User::find($id);
-  
+
         if (!empty($data['image_ids'])) {
             $user->images()->attach($data['image_ids']);
             $data['avatar'] = Image::find($data['image_ids'][0])->small;
@@ -149,8 +150,25 @@ class UserController extends Controller
 
         $query = $request['q'];
         $order = $request['o'];
-        $users = User::where('id', '>', '1')
-            ->with('images')
+        $eventId = $request['event_id'];
+        $followersForId = $request['followers_for'];
+        $followingForId = $request['following_for'];
+        $users = User::where('id', '>', '1');
+
+        if ($eventId) {
+            $users = Event::find($eventId)->attendees();
+        }
+        if ($followersForId) {
+            $users = User::find($followersForId)->followers();
+        }
+        if ($followingForId) {
+            $users = User::find($followingForId)->following();
+        }
+        //TODO: check if this is a valid condition
+        if ($query) {
+            $users = $users->where('name', 'like', '%' . $query . '%');
+        }
+        $users = $users->with('images')
             ->withCount([
                 'following',
                 'followers',
@@ -158,13 +176,8 @@ class UserController extends Controller
                     $query->where('user_id', $userId);
                 },
             ]);
-        //TODO: check if this is a valid condition
-        if ($query) {
-            $users = $users->where('name', 'like', '%' . $query . '%');
-        }
-        if($order=='name'){
+        if ($order == 'name') {
             $users = $users->orderBy('name');
-          
         }
         $length = (int) (empty($request['perPage']) ? 15 : $request['perPage']);
         $data = $users->paginate($length);
