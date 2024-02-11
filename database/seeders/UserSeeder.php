@@ -27,14 +27,14 @@ class UserSeeder extends Seeder
             'is_editor' => 1,
         ]);
 
-        User::factory()->create([
-            'avatar' => 'https://randomuser.me/api/portraits/men/1.jpg',
-            'name' => 'NB Gospel',
-            'email' => 'nbgospel@gmail.com',
-            'password' => Hash::make('mercy'),
-            'is_verified' => 1,
-            'is_editor' => 1,
-        ]);
+        // User::factory()->create([
+        //     'avatar' => 'https://randomuser.me/api/portraits/men/1.jpg',
+        //     'name' => 'NB Gospel',
+        //     'email' => 'nbgospel@gmail.com',
+        //     'password' => Hash::make('mercy'),
+        //     'is_verified' => 1,
+        //     'is_editor' => 1,
+        // ]);
 
         $datas = [
             [
