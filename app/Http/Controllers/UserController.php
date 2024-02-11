@@ -173,7 +173,7 @@ class UserController extends Controller
                 'following',
                 'followers',
                 'followers as is_following' => function (Builder $query) use ($userId) {
-                    $query->where('user_id', $userId);
+                    $query->where('follower_id', $userId);
                 },
             ]);
         if ($order == 'name') {

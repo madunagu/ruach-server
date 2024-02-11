@@ -94,16 +94,16 @@ class ImageController extends Controller
             );
             $image_resize = $manager->read($photo);
 
-            $image_resize->resize(500, 500);
+            $image_resize->resize(width: 500);
             // dd(storage_path('app/public/images/large/'.$name));
             $image_resize->save(storage_path('app/public/images/large/' . $name));
             // $save = Storage::putFileAs("public/images/large", new File('images/replacer'), $name);
 
-            $image_resize->resize(200, 200);
+            $image_resize->resize(width: 200);
             $image_resize->save(storage_path('app/public/images/medium/' . $name));
             // $save = Storage::putFileAs("public/images/medium", new File('images/replacer'), $name);
 
-            $image_resize->resize(100, 100);
+            $image_resize->resize(width: 100);
             // $image_resize->save('images/replacer');
             $image_resize->save(storage_path('app/public/images/small/' . $name));
 

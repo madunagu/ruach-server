@@ -33,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
             'society' => 'App\Models\Society',
             'user' => 'App\Models\User',
             'video' => 'App\Models\VideoPost',
+            'playlist' => 'App\Models\Playlist',
         ]);
         Schema::defaultStringLength(191);
     }
