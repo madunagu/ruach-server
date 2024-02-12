@@ -153,7 +153,7 @@ class UserController extends Controller
         $eventId = $request['event_id'];
         $followersForId = $request['followers_for'];
         $followingForId = $request['following_for'];
-        $users = User::where('id', '>', '1');
+        $users = User::where('id', '>', '0');
 
         if ($eventId) {
             $users = Event::find($eventId)->attendees();

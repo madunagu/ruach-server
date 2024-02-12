@@ -17,19 +17,17 @@ class FeedSeeder extends Seeder
     {
 
         Feed::truncate();
-        $types = [
-            'event', 'audio', 'video', 'post'
-        ];
+        $types = ['event', 'audio', 'video', 'post'];
+
         $inserts = [];
+        
         for ($i = 1; $i <= 10; $i++) {
-            foreach ($types as $type) {
-                $inserts[] = [
-                    'parentable_type' => $type,
-                    'postable_type' => 'user',
-                    'postable_id' => $i,
-                    'parentable_id' => $i,
-                ];
-            }
+            $inserts[] = [
+                'parentable_type' => 'audio',
+                'parentable_id' => $i,
+                'postable_type' => 'user',
+                'postable_id' => 1,
+            ];
         }
 
         Feed::insert($inserts);
