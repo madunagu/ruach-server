@@ -22,9 +22,8 @@ class AudioPostSeeder extends Seeder
                 'full_text' => <<<EOT
                 [ti:Takeover]
                 [ar:1Spirit and Theophius Sunday]
-                [re:]
-                [ve:23.12.28]
                 [length:13:55.10]
+                
                 [00:10.49]Pre-Verse:
                 [00:35.73]I cannot know you by myself,
                 [00:40.26]Holy Spirit take over
@@ -108,7 +107,6 @@ class AudioPostSeeder extends Seeder
                 [10:27.50]I cannot know you by myself, unless you take over,
                 [10:34.42]I cannot run this race by myself, unless you take over
                 [10:44.55]I cannot sing you by myself, unless you take over
-                [00:00.00][Tongues and prayers]
 
                 EOT,
                 'description' => 'A powerful worship ministration by Min Theophilus Sunday asking the Holy Spirit to takeover',
@@ -127,8 +125,6 @@ class AudioPostSeeder extends Seeder
                 [ti:Take It Away (II)]
                 [ar:Theophilus Sunday]
                 [al:Chantss]
-                [re:]
-                [ve:23.12.28]
                 [length:02:11.69]
                 [00:00.99]Say Whatever doesn’t look like You
                 [00:03.57]That is still reflecting in me
