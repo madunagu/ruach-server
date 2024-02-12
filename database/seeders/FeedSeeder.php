@@ -20,8 +20,8 @@ class FeedSeeder extends Seeder
         $types = ['event', 'audio', 'video', 'post'];
 
         $inserts = [];
-        
-        for ($i = 1; $i <= 10; $i++) {
+
+        for ($i = 1; $i <= 6; $i++) {
             $inserts[] = [
                 'parentable_type' => 'audio',
                 'parentable_id' => $i,

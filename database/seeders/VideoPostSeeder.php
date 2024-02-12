@@ -16,6 +16,6 @@ class VideoPostSeeder extends Seeder
     public function run()
     {
         VideoPost::truncate();
-        VideoPost::factory(100)->create();
+        // VideoPost::factory(100)->create();
     }
 }
