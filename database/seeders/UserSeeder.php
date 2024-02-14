@@ -22,7 +22,7 @@ class UserSeeder extends Seeder
             'id' => 1,
             'avatar' => 'https://randomuser.me/api/portraits/men/1.jpg',
             'name' => 'Ruach Curated',
-            'email' => 'ruachapp@gmail.com',
+            'email' => 'contact.ruach.app@gmail.com',
             'password' => Hash::make('mercy'),
             'is_verified' => 1,
             'is_editor' => 1,

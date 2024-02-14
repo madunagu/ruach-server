@@ -74,6 +74,7 @@ class ImageSeeder extends Seeder
             ],
         ];
 
+        $inserResult = Image::insert($datas);
 
         //Add Images to User
         $appendages =  [];
