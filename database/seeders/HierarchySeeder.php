@@ -17,20 +17,22 @@ class HierarchySeeder extends Seeder
     {
         Hierarchy::truncate();
         $heirarchies = [[
+            'id'=>1,
             'rank' => '1',
-            'name'=>'General Overseer',
-            // 'person_name'=>' John David',
-            'user_id'=>1
+            'name'=>'Minister',
+            'user_id'=>51
         ],[
-            'rank' => '2',
-            'name'=>'Assistant Overseer',
-            // 'person_name'=>'Owen Kings',
-            'user_id'=>3
+
+            'id'=>2,
+            'rank' => '1',
+            'name'=>'Minister',
+            'user_id'=>52
         ],[
-            'rank' => '3',
-            'name'=>'Praise Leader',
-            // 'person_name'=>' Michael Jordan',
-            'user_id'=>5
+
+            'id'=>3,
+            'rank' => '1',
+            'name'=>'Minister',
+            'user_id'=>53
         ]];
         Hierarchy::insert($heirarchies);
 

@@ -629,6 +629,7 @@ class AudioPostSeeder extends Seeder
         // \App\Models\AudioPost::insert($datas);
         foreach ($datas as $audio ) {
             $audioPost = \App\Models\AudioPost::create($audio);
+            $audioPost->hierarchies()->attach([1]);
         }
     }
 }

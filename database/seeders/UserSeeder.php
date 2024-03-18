@@ -70,7 +70,7 @@ class UserSeeder extends Seeder
                 'id' => 54,
                 'is_minister' => 1,
                 'name' => 'Ephraim Sanni',
-                'email' => 'theoskahlsfis',
+                'email' => bin2hex(random_bytes(10)),
                 'password' => 'intermittent',
                 'avatar' => 'http://ruach.ziritetech.com/storage/images/full/ministers/ephraim-sanni.jpeg',
 
