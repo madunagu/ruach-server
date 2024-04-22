@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 
 use Validator;
 
@@ -55,7 +56,16 @@ class LoginController extends Controller
         //THIS LINE WAS COMMENTED TO ENABLE UNVERIFIED USERS
         //$credentials['is_verified'] = 1;
         if ($this->attemptLogin($request)) {
-            $user = $this->guard()->user();
+            $session = $this->guard()->user();
+            $user = User::with(['images'])->withCount([
+                'following',
+                'likes',
+                'followers',
+                'messages',
+                'followers as is_following' => function (Builder $query) use ($session) {
+                    $query->where('user_id', $session->id);
+                },
+            ])->find($session->id);
             $token = $user->createToken('devotion');
 
             return response()->json([
