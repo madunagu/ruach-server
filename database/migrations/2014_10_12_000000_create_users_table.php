@@ -19,7 +19,6 @@ return new class extends Migration
             $table->string('password');
             $table->text('description')->nullable();
 
-
             $table->string('avatar')->nullable();
             $table->dateTime('assigned_at')->nullable();
             $table->dateTime('deleted_at')->nullable();
@@ -28,7 +27,6 @@ return new class extends Migration
             $table->boolean('is_minister')->default(0);
             $table->boolean('is_verified')->default(0);
             $table->boolean('is_editor')->default(0);
-
 
             $table->rememberToken();
             $table->timestamps();

@@ -18,59 +18,61 @@ class ImageSeeder extends Seeder
     public function run()
     {
         Image::truncate();
+
+        $appURL = env('APP_URL');
         // Image::factory(200)->create();
         $datas = [
             [
-                'id' => 51,
-                'full' => 'http://ruach.ziritetech.com/storage/images/ministers/full/theophilus_sunday.jpg',
-                'large' => 'http://ruach.ziritetech.com/storage/images/ministers/full/theophilus_sunday.jpg',
-                'medium' => 'http://ruach.ziritetech.com/storage/images/ministers/medium/theophilus_sunday.jpg',
-                'small' => 'http://ruach.ziritetech.com/storage/images/ministers/small/theophilus_sunday.jpg',
-                'user_id' => 1,
+                "id" => 51,
+                "full" => "$appURL/storage/images/ministers/full/theophilus-sunday.jpg",
+                "large" => "$appURL/storage/images/ministers/full/theophilus-sunday.jpg",
+                "medium" => "$appURL/storage/images/ministers/medium/theophilus-sunday.jpg",
+                "small" => "$appURL/storage/images/ministers/small/theophilus-sunday.jpg",
+                "user_id" => 1,
             ],
 
             [
-                'id' => 52,
-                'full' => 'http://ruach.ziritetech.com/storage/images/ministers/full/arome-osayi.jpeg',
-                'large' => 'http://ruach.ziritetech.com/storage/images/ministers/full/arome-osayi.jpeg',
-                'medium' => 'http://ruach.ziritetech.com/storage/images/ministers/medium/arome-osayi.jpeg',
-                'small' => 'http://ruach.ziritetech.com/storage/images/ministers/small/arome-osayi.jpeg',
-                'user_id' => 1,
+                "id" => 52,
+                "full" => "$appURL/storage/images/ministers/full/arome-osayi.jpeg",
+                "large" => "$appURL/storage/images/ministers/full/arome-osayi.jpeg",
+                "medium" => "$appURL/storage/images/ministers/medium/arome-osayi.jpeg",
+                "small" => "$appURL/storage/images/ministers/small/arome-osayi.jpeg",
+                "user_id" => 1,
             ],
 
             [
-                'id' => 53,
-                'full' => 'http://ruach.ziritetech.com/storage/images/ministers/full/joshua-selman.jpeg',
-                'large' => 'http://ruach.ziritetech.com/storage/images/ministers/full/joshua-selman.jpeg',
-                'medium' => 'http://ruach.ziritetech.com/storage/images/ministers/medium/joshua-selman.jpeg',
-                'small' => 'http://ruach.ziritetech.com/storage/images/ministers/small/joshua-selman.jpeg',
-                'user_id' => 1,
+                "id" => 53,
+                "full" => "$appURL/storage/images/ministers/full/joshua-selman.jpeg",
+                "large" => "$appURL/storage/images/ministers/full/joshua-selman.jpeg",
+                "medium" => "$appURL/storage/images/ministers/medium/joshua-selman.jpeg",
+                "small" => "$appURL/storage/images/ministers/small/joshua-selman.jpeg",
+                "user_id" => 1,
             ],
             [
-                'id' => 54,
-                'full' => 'http://ruach.ziritetech.com/storage/images/ministers/full/ephraim-sanni.jpeg',
-                'large' => 'http://ruach.ziritetech.com/storage/images/ministers/full/ephraim-sanni.jpeg',
-                'medium' => 'http://ruach.ziritetech.com/storage/images/ministers/medium/ephraim-sanni.jpeg',
-                'small' => 'http://ruach.ziritetech.com/storage/images/ministers/small/ephraim-sanni.jpeg',
-                'user_id' => 1,
-            ],
-
-            [
-                'id' => 55,
-                'full' => 'http://ruach.ziritetech.com/storage/images/ministers/full/michael-orokpo.jpeg',
-                'large' => 'http://ruach.ziritetech.com/storage/images/ministers/large/michael-orokpo.jpeg',
-                'medium' => 'http://ruach.ziritetech.com/storage/images/ministers/medium/michael-orokpo.jpeg',
-                'small' => 'http://ruach.ziritetech.com/storage/images/ministers/small/michael-orokpo.jpeg',
-                'user_id' => 1,
+                "id" => 54,
+                "full" => "$appURL/storage/images/ministers/full/ephraim-sanni.jpeg",
+                "large" => "$appURL/storage/images/ministers/full/ephraim-sanni.jpeg",
+                "medium" => "$appURL/storage/images/ministers/medium/ephraim-sanni.jpeg",
+                "small" => "$appURL/storage/images/ministers/small/ephraim-sanni.jpeg",
+                "user_id" => 1,
             ],
 
             [
-                'id' => 56,
-                'full' => 'http://ruach.ziritetech.com/storage/images/ministers/full/charles-spurgeon.jpeg',
-                'large' => 'http://ruach.ziritetech.com/storage/images/ministers/large/charles-spurgeon.jpeg',
-                'medium' => 'http://ruach.ziritetech.com/storage/images/ministers/medium/charles-spurgeon.jpeg',
-                'small' => 'http://ruach.ziritetech.com/storage/images/ministers/small/charles-spurgeon.jpeg',
-                'user_id' => 1,
+                "id" => 55,
+                "full" => "$appURL/storage/images/ministers/full/michael-orokpo.jpeg",
+                "large" => "$appURL/storage/images/ministers/large/michael-orokpo.jpeg",
+                "medium" => "$appURL/storage/images/ministers/medium/michael-orokpo.jpeg",
+                "small" => "$appURL/storage/images/ministers/small/michael-orokpo.jpeg",
+                "user_id" => 1,
+            ],
+
+            [
+                "id" => 56,
+                "full" => "$appURL/storage/images/ministers/full/charles-spurgeon.jpeg",
+                "large" => "$appURL/storage/images/ministers/large/charles-spurgeon.jpeg",
+                "medium" => "$appURL/storage/images/ministers/medium/charles-spurgeon.jpeg",
+                "small" => "$appURL/storage/images/ministers/small/charles-spurgeon.jpeg",
+                "user_id" => 1,
             ],
         ];
 
@@ -80,22 +82,22 @@ class ImageSeeder extends Seeder
         $appendages =  [];
         for ($i = 51; $i < 57; $i++) {
             $appendages[] =    [
-                'image_id' => $i,
-                'imageable_id' => $i,
-                'imageable_type' => 'user'
+                "image_id" => $i,
+                "imageable_id" => $i,
+                "imageable_type" => "user"
             ];
         }
         //Add Images for Theophilus to 6 new audio
         for ($i = 0; $i < 7; $i++) {
             $appendages[] =    [
-                'image_id' => 1,
-                'imageable_id' => $i,
-                'imageable_type' => 'audio'
+                "image_id" => 1,
+                "imageable_id" => $i,
+                "imageable_type" => "audio"
             ];
         }
 
 
 
-        DB::table('imageables')->insert($appendages);
+        DB::table("imageables")->insert($appendages);
     }
 }

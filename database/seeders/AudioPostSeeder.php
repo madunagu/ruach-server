@@ -14,12 +14,12 @@ class AudioPostSeeder extends Seeder
      */
     public function run()
     {
-        $app_url = env('APP_URL');
+        $appURL = env('APP_URL');
         AudioPost::truncate();
         $datas = [
             [
                 'name' => 'Takeover',
-                'src_url' => "$app_url/storage/audio/legacy/takeover.mp3",
+                'src_url' => "$appURL/storage/audio/legacy/takeover.mp3",
                 'full_text' => <<<EOT
                 [ti:Takeover]
                 [ar:1Spirit and Theophius Sunday]
@@ -121,7 +121,7 @@ class AudioPostSeeder extends Seeder
 
             [
                 'name' => 'Take It Away',
-                'src_url' => "$app_url//storage/audio/legacy/take_it_away.mp3",
+                'src_url' => "$appURL/storage/audio/legacy/take_it_away.mp3",
                 'full_text' => <<<EOT
                 [ti:Take It Away (II)]
                 [ar:Theophilus Sunday]
@@ -157,7 +157,7 @@ class AudioPostSeeder extends Seeder
 
             [
                 'name' => 'My Desire',
-                'src_url' => "$app_url//storage/audio/legacy/my_desire.mp3",
+                'src_url' => "$appURL/storage/audio/legacy/my-desire.mp3",
                 'full_text' => <<<EOT
                 [ti:my_desire]
                 [ar:Theophilus Sunday]
@@ -274,7 +274,7 @@ class AudioPostSeeder extends Seeder
 
             [
                 'name' => 'Take Me Deeper',
-                'src_url' => "$app_url//storage/audio/legacy/take_me_deeper.mp3",
+                'src_url' => "$appURL/storage/audio/legacy/take-me-deeper.mp3",
                 'full_text' => <<<EOT
                 [ti:take_me_deeper]
                 [ar:Theophilus Sunday]
@@ -341,7 +341,7 @@ class AudioPostSeeder extends Seeder
 
             [
                 'name' => 'One Sound',
-                'src_url' => "$app_url//storage/audio/legacy/one_sound.mp3",
+                'src_url' => "$appURL/storage/audio/legacy/one-sound.mp3",
                 'full_text' => <<<EOT
                 [ti:one-sound]
                 [ar:Theophilus Sunday]
@@ -448,7 +448,7 @@ class AudioPostSeeder extends Seeder
 
             [
                 'name' => 'Come Oh Spirit',
-                'src_url' => "$app_url//storage/audio/legacy/come_oh_spirit.mp3",
+                'src_url' => "$appURL/storage/audio/legacy/come-oh-spirit.mp3",
                 'full_text' => <<<EOT
                 [ti:come_oh_spirit]
                 [ar:Theophilus Sunday]

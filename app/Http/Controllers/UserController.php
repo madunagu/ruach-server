@@ -153,6 +153,7 @@ class UserController extends Controller
         $eventId = $request['event_id'];
         $followersForId = $request['followers_for'];
         $followingForId = $request['following_for'];
+        $justMinisters = $request['just_ministers'];
         $users = User::where('id', '>', '0');
 
         if ($eventId) {
@@ -178,6 +179,9 @@ class UserController extends Controller
             ]);
         if ($order == 'name') {
             $users = $users->orderBy('name');
+        }
+        if ($justMinisters == true) {
+            $users = $users->where('is_minister','1');
         }
         $length = (int) (empty($request['perPage']) ? 15 : $request['perPage']);
         $data = $users->paginate($length);

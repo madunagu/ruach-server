@@ -30,13 +30,25 @@ class UserSeeder extends Seeder
 
         User::factory()->create([
             'id' => 2,
-            'avatar' => 'https://randomuser.me/api/portraits/men/1.jpg',
+            'avatar' => 'https://randomuser.me/api/portraits/men/2.jpg',
             'name' => 'NB Gospel',
             'email' => 'gospelnb1@gmail.com',
             'password' => Hash::make('blessed'),
             'is_verified' => 1,
             'is_editor' => 1,
         ]);
+
+        User::factory()->create([
+            'id' => 3,
+            'avatar' => 'https://randomuser.me/api/portraits/men/3.jpg',
+            'name' => 'Ekene Madunagu',
+            'email' => 'ekenemadunagu@gmail.com',
+            'password' => Hash::make('mercy'),
+            'is_verified' => 1,
+            'is_editor' => 1,
+        ]);
+
+        $appURL = env('APP_URL');
 
         $datas = [
             [
@@ -45,7 +57,7 @@ class UserSeeder extends Seeder
                 'name' => 'Theophilus Sunday',
                 'email' => bin2hex(random_bytes(10)),
                 'password' => 'intermittent',
-                'avatar' => 'http://ruach.ziritetech.com/storage/images/ministers/small/theophilus_sunday.jpg',
+                'avatar' => "$appURL/storage/images/ministers/small/theophilus-sunday.jpg",
 
             ],
             [
@@ -54,7 +66,7 @@ class UserSeeder extends Seeder
                 'name' => 'Arome Osayi',
                 'email' => bin2hex(random_bytes(10)),
                 'password' => 'intermittent',
-                'avatar' => 'http://ruach.ziritetech.com/storage/images/ministers/small/arome-osayi.jpeg',
+                'avatar' => "$appURL/storage/images/ministers/small/arome-osayi.jpeg",
 
             ],
             [
@@ -63,7 +75,7 @@ class UserSeeder extends Seeder
                 'name' => 'Joshua Selman',
                 'email' => bin2hex(random_bytes(10)),
                 'password' => 'intermittent',
-                'avatar' => 'http://ruach.ziritetech.com/storage/images/full/ministers/joshua-selman.jpeg',
+                'avatar' => "$appURL/storage/images/ministers/small/joshua-selman.jpeg",
 
             ],
             [
@@ -72,7 +84,7 @@ class UserSeeder extends Seeder
                 'name' => 'Ephraim Sanni',
                 'email' => bin2hex(random_bytes(10)),
                 'password' => 'intermittent',
-                'avatar' => 'http://ruach.ziritetech.com/storage/images/full/ministers/ephraim-sanni.jpeg',
+                'avatar' => "$appURL/storage/images/ministers/small/ephraim-sanni.jpeg",
 
             ],
             [
@@ -81,7 +93,7 @@ class UserSeeder extends Seeder
                 'name' => 'Michael Orokpo',
                 'email' => bin2hex(random_bytes(10)),
                 'password' => 'intermittent',
-                'avatar' => 'http://ruach.ziritetech.com/storage/images/full/ministers/michael-orokpo.jpeg',
+                'avatar' => "$appURL/storage/images/ministers/small/michael-orokpo.jpeg",
 
             ],
             [
@@ -90,7 +102,7 @@ class UserSeeder extends Seeder
                 'name' => 'Charles Spurgeon',
                 'email' => bin2hex(random_bytes(10)),
                 'password' => 'intermittent',
-                'avatar' => 'http://ruach.ziritetech.com/storage/images/full/ministers/charles-spurgeon.jpeg',
+                'avatar' => "$appURL/storage/images/ministers/small/charles-spurgeon.jpeg",
 
             ],
 
