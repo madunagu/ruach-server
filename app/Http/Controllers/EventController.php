@@ -168,7 +168,7 @@ class EventController extends Controller
 
         $userId = Auth::id();
         $query = $request['q'];
-        $events = Event::with('user', 'images')->with(['attendees' => function ($query) {
+        $events = Event::with('user', 'images','poster')->with(['attendees' => function ($query) {
             $query->limit(7);
         }])
             ->with(['hierarchies' => [

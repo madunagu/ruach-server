@@ -18,8 +18,8 @@ class PostFactory extends Factory
     {
         return [
             'title' => fake()->sentence,
-            'user_id' => rand(1, 10),
-            'poster_id' => rand(1, 10),
+            'user_id' => rand(1, 4),
+            'poster_id' => rand(1, 3),
             'poster_type' => 'user',
             'body' => fake()->paragraph,
         ];
