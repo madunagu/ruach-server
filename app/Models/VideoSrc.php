@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class VideoSrc extends Model
 {
-    protected $fillable = ['src', 'length', 'quality', 'format','dimensions', 'size', 'video_post_id',];
+    protected $fillable = ['src', 'length', 'quality', 'format','dimensions', 'width', 'height', 'variant', 'mime', 'status', 'size', 'video_post_id',];
 }

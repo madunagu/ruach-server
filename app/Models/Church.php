@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-use Nicolaslopezj\Searchable\SearchableTrait;
+use App\Traits\Searchable as SearchableTrait;
 
 class Church extends Model
 {

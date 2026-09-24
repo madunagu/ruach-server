@@ -18,6 +18,8 @@ use App\Models\AudioSrc;
 use App\Traits\Interactable;
 use App\Models\Feed;
 use App\Http\Resources\AudioPostCollection;
+use App\Jobs\ProcessMediaVariants;
+use App\Services\LyricsService;
 // use wapmorgan\Mp3Info\Mp3Info;
 use wapmorgan\MediaFile\MediaFile;
 // use wapmorgan\MediaFile\Exceptions;
@@ -73,6 +75,28 @@ class AudioPostController extends Controller
 
         $data['length'] = round($res['length']);
         $audio = AudioPost::create($data);
+
+        // Best-effort embedded-lyrics extraction (fast, no ext deps).
+        try {
+            $lyrics = app(LyricsService::class)->extractFromDisk($path);
+            if ($lyrics && empty($audio->full_text)) {
+                $audio->update([
+                    'full_text' => app(LyricsService::class)->normalize($lyrics, (int) $data['length']),
+                    'lyrics_status' => 'ready',
+                ]);
+            } elseif (!empty($audio->full_text)) {
+                $audio->update(['lyrics_status' => 'ready']);
+            }
+        } catch (\Throwable $e) {
+        }
+
+        // Heavy ffmpeg variants run async so uploads stay fast.
+        try {
+            ProcessMediaVariants::dispatch('audio', $audio->id, $path);
+            $audio->update(['media_status' => 'processing']);
+        } catch (\Throwable $e) {
+        }
+
         $interacted = $this->saveRelated($data, $audio);
         //for quick use adding feed here, can be removed later
 
@@ -143,6 +167,20 @@ class AudioPostController extends Controller
 
     public function getTrackFullText(AudioPost $audio): AudioPost
     {
+        // Hook: embedded lyrics -> Whisper (when OPENAI_API_KEY set).
+        // Legacy Google Speech path kept behind $shouldTransrcibe.
+        try {
+            $diskPath = $audio->src_url ? $this->diskPathFromUrl($audio->src_url) : null;
+            if (empty($audio->full_text) && $diskPath) {
+                $text = app(\App\Services\TranscriptionService::class)
+                    ->transcribeDiskPath($diskPath, (int) $audio->length);
+                if ($text) {
+                    $audio->update(['full_text' => $text, 'lyrics_status' => 'ready']);
+                    return $audio->fresh() ?? $audio;
+                }
+            }
+        } catch (\Throwable $e) {
+        }
         if ($this->shouldTransrcibe) {
             //connect to google
             $content = file_get_contents($audio->src_url);
@@ -171,6 +209,16 @@ class AudioPostController extends Controller
             //save it then return object
         }
         return $audio;
+    }
+
+    private function diskPathFromUrl(string $url): ?string
+    {
+        // Storage::url() => /storage/<rel>. Reverse it for local disk access.
+        $pos = strpos($url, '/storage/');
+        if ($pos === false) {
+            return null;
+        }
+        return ltrim(substr($url, $pos + strlen('/storage/')), '/');
     }
 
     public function update(Request $request)
