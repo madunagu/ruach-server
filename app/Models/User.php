@@ -23,7 +23,13 @@ class User extends Authenticatable
         'email',
         'phone',
         'password',
-        'description'
+        'description',
+        'avatar',
+        'google_id',
+        'is_admin',
+        'is_minister',
+        'is_verified',
+        'is_editor',
     ];
 
     /**

@@ -8,6 +8,7 @@ use App\Http\Controllers\AddressController;
 use App\Http\Controllers\AudioPostController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\ChurchController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DevotionalController;
@@ -21,6 +22,7 @@ use App\Http\Controllers\SocietyController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VideoPostController;
+use App\Http\Controllers\AdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,6 +46,8 @@ use App\Http\Controllers\VideoPostController;
 Route::post('/login', [LoginController::class, 'login']);
 
 Route::post('/register', [RegisterController::class, 'register']);
+
+Route::post('/auth/google', [GoogleAuthController::class, 'login']);
 
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -144,4 +148,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/tags', [TagController::class, 'create']);
     Route::put('/tags/{id}', [TagController::class, 'update']);
     Route::delete('/tags/{id}', [TagController::class, 'delete']);
+
+    Route::middleware('admin')->group(function () {
+        Route::get('/admin/stats', [AdminController::class, 'stats']);
+        Route::get('/admin/users', [AdminController::class, 'users']);
+        Route::put('/admin/users/{id}', [AdminController::class, 'updateUser']);
+        Route::get('/admin/churches', [AdminController::class, 'churches']);
+        Route::get('/admin/trending', [AdminController::class, 'trending']);
+    });
 });

@@ -9,6 +9,6 @@ class AudioSrc extends Model
     protected $fillable = [
         'refresh_rate',
         'length',
-        'bitrate', 'src', 'size', 'format', 'audio_post_id',
+        'bitrate', 'src', 'size', 'format', 'variant', 'mime', 'status', 'audio_post_id',
     ];
 }

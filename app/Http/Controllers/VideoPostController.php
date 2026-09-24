@@ -20,6 +20,7 @@ use App\Http\Resources\AudioPostCollection;
 use App\Traits\Interactable;
 use App\Models\VideoSrc;
 use App\Models\Feed;
+use App\Jobs\ProcessMediaVariants;
 
 class VideoPostController extends Controller
 {
@@ -63,6 +64,13 @@ class VideoPostController extends Controller
         $data['length'] = $details['length'];
 
         $videoPost = VideoPost::create($data);
+
+        // Adaptive renditions (480p/720p) run async so uploads stay fast.
+        try {
+            ProcessMediaVariants::dispatch('video', $videoPost->id, $path);
+            $videoPost->update(['media_status' => 'processing']);
+        } catch (\Throwable $e) {
+        }
 
         //for quick use adding feed here, can be removed later
         $feedCreated = Feed::create(['parentable_type' => 'video', 'postable_type' => 'user', 'postable_id' => $userId, 'parentable_id' => $videoPost->id]);
