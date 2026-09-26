@@ -2,31 +2,17 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Universal\Constants;
-use Illuminate\Support\Facades\DB;
 use App\Models\Church;
+use Illuminate\Database\Seeder;
 
 class ChurchSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
-     *
-     * @return void
+     * Seed the baseline table. The named, scripture-centered demo churches are
+     * added by FaithContentSeeder after the people and addresses exist.
      */
-    public function run()
+    public function run(): void
     {
         Church::truncate();
-        Church::factory(10)->create();
-
-        for ($i = 0; $i < 10; $i++) {
-            $query[] =
-                [
-                    'church_id' => $i,
-                    'churchable_id' => 10 - $i,
-                    'churchable_type' => Constants::$_[$i % count(Constants::$_)],
-                ];
-        }
-        DB::table('churchables')->insert($query);
     }
 }

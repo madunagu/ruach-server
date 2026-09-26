@@ -37,5 +37,6 @@ class DatabaseSeeder extends Seeder
         // $this->call(HierarchyGroupSeeder::class);
         $this->call(FollowerSeeder::class);
         $this->call(FeedSeeder::class);
+        $this->call(FaithContentSeeder::class);
     }
 }

@@ -2,19 +2,17 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Comment;
+use Illuminate\Database\Seeder;
 
 class CommentSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
-     *
-     * @return void
+     * Clear orphaned demo comments. FaithContentSeeder attaches comments to
+     * the records after those records have been created.
      */
-    public function run()
+    public function run(): void
     {
         Comment::truncate();
-        Comment::factory(10)->create();
     }
 }

@@ -1,36 +1,18 @@
 <?php
 
-
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use App\Models\Address;
-use App\Universal\Constants;
+use Illuminate\Database\Seeder;
 
 class AddressSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
-     *
-     * @return void
+     * Clear the legacy address sample. FaithContentSeeder creates the Nigerian
+     * locations used by the demo pastors, churches, and events.
      */
-    public function run()
+    public function run(): void
     {
         Address::truncate();
-        
-        Address::factory(30)->create();
-
-        $query = [];
-
-        for ($i = 0; $i < 10; $i++) {
-            $query[] =
-                [
-                    'address_id' => $i,
-                    'addressable_id' => 10 - $i,
-                    'addressable_type' => Constants::$_[$i % count(Constants::$_)],
-                ];
-        }
-        DB::table('addressables')->insert($query);
     }
 }

@@ -17,7 +17,5 @@ class DevotionalSeeder extends Seeder
     public function run()
     {
         Devotional::truncate();
-        Devotional::factory(100)->create();
-
     }
 }

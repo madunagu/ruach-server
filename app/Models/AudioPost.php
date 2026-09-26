@@ -40,6 +40,8 @@ class AudioPost extends Model
         'size',
         'length',
         'language',
+        'lyrics_status',
+        'media_status',
 
     ];
 
