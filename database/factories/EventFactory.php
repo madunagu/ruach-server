@@ -27,7 +27,7 @@ class EventFactory extends Factory
             'user_id' => rand(1, 10),
             'description' => fake()->paragraph(5, true),
             'poster_type' => 'user',
-            'poster_id' => rand(1, 10),
+            'poster_id' => rand(1, 3),
         ];
     }
     
