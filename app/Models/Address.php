@@ -56,8 +56,14 @@ class Address extends Model
         return $this->morphMany(Like::class, 'likeable');
     }
 
-    public function toString()
+    public function toString(): string
     {
-        return $this->address1 . $this->address2 . $this->city . $this->state;
+        return implode(', ', array_filter([
+            trim(($this->address1 ?? '') . ' ' . ($this->address2 ?? '')),
+            $this->city ?? '',
+            $this->state ?? '',
+            $this->postal_code ?? '',
+            $this->country ?? '',
+        ]));
     }
 }

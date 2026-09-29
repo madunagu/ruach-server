@@ -42,7 +42,6 @@ class AudioPost extends Model
         'language',
         'lyrics_status',
         'media_status',
-
     ];
 
     public function images()

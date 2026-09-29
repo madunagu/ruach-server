@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Devotional;
+use App\Models\Feed;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
@@ -24,21 +25,22 @@ class DevotionalController extends Controller
             'closing_prayer' => 'string|nullable',
             'body' => 'string|required',
             'memory_verse' => 'string|nullable|max:255',
-            'day' => 'nullable',
+            'day' => 'nullable|date',
         ]);
 
 
         $data = collect($request->all())->toArray();
-        $data['day']= $data['day']['date'];
-        $data['poster_id'] = Auth::user()->id;
+        $userId = Auth::id();
+        $data['user_id'] = $userId;
+        $data['poster_id'] = $userId;
         $data['poster_type'] = 'user';
         $result = Devotional::create($data);
-        //$saved = $this->saveRelated($data, $result);
-        //create event emmiter or reminder or notifications for those who may be interested
 
+        // Add to feed so followers see devotionals.
+        Feed::create(['parentable_type' => 'devotional', 'postable_type' => 'user', 'postable_id' => $userId, 'parentable_id' => $result->id]);
 
         if ($result) {
-            return response()->json(['data' => true], 201);
+            return response()->json(['data' => $result], 201);
         } else {
             return response()->json(['data' => false, 'errors' => 'unknown error occured'], 400);
         }
@@ -49,10 +51,10 @@ class DevotionalController extends Controller
         $validator = Validator::make($request->all(), [
             'id' => 'integer|required|exists:devotionals,id',
             'title' => 'string|required|max:255',
-            'opening_prayer' => 'string',
-            'closing_prayer' => 'string',
+            'opening_prayer' => 'string|nullable',
+            'closing_prayer' => 'string|nullable',
             'body' => 'string|required',
-            'memory_verse' => 'string|required|max:255',
+            'memory_verse' => 'string|nullable|max:255',
             'day' => 'nullable|date',
         ]);
 
@@ -64,14 +66,17 @@ class DevotionalController extends Controller
         $data['poster_type'] = 'user';
         $id = $request->route('id');
         $result = Devotional::find($id);
-        //update result
+
+        if (!$result) {
+            return response()->json(['data' => false, 'errors' => 'devotional not found'], 404);
+        }
+
         $interacted = $this->saveRelated($data, $result);
-  
         $result = $result->update($data);
 
 
         if ($result) {
-            return response()->json(['data' => true], 201);
+            return response()->json(['data' => true], 200);
         } else {
             return response()->json(['data' => false, 'errors' => 'unknown error occured'], 400);
         }
@@ -81,8 +86,8 @@ class DevotionalController extends Controller
     {
         $id = (int) $request->route('id');
         $userId = Auth::user()->id;
-        if ($event = Devotional::withCount('comments')
-            ->with([ 'poster', 'churches'])
+        if ($devotional = Devotional::withCount('comments')
+            ->with(['poster', 'churches'])
             ->with(['devotees' => function ($query) {
                 $query->limit(7);
             }])
@@ -100,7 +105,7 @@ class DevotionalController extends Controller
             ])->find($id)
         ) {
             return response()->json([
-                'data' => $event
+                'data' => $devotional
             ], 200);
         } else {
             return response()->json([
@@ -120,7 +125,7 @@ class DevotionalController extends Controller
 
         $userId = Auth::id();
         $query = $request['q'];
-        $events = Devotional::with('poster')->with(['devotees' => function ($query) {
+        $devotionals = Devotional::with('poster')->with(['devotees' => function ($query) {
             $query->limit(7);
         }])->withCount([
             'devotees',
@@ -128,14 +133,13 @@ class DevotionalController extends Controller
                 $query->where('user_id', $userId);
             },
         ])
-        ->orderBy('devotionals.created_at', 'DESC'); //TODO: add participants to the search using heirarchies
+            ->orderBy('devotionals.created_at', 'DESC');
         if (!empty($query)) {
-            $events = $events->search($query);
+            $devotionals = $devotionals->search($query);
         }
-        //here insert search parameters and stuff
         $length = (int) (empty($request['perPage']) ? 15 : $request['perPage']);
-        $events = $events->paginate($length);
-        $data = new DevotionalCollection($events);
+        $devotionals = $devotionals->paginate($length);
+        $data = new DevotionalCollection($devotionals);
         return response()->json($data);
     }
 
@@ -144,12 +148,15 @@ class DevotionalController extends Controller
         $id = $request->route('id');
         $tog = $request['value'];
         $userId = Auth::id();
-        $event = Devotional::find((int)$id);
+        $devotional = Devotional::find((int)$id);
+        if (!$devotional) {
+            return response()->json(['data' => false], 404);
+        }
         if ($tog) {
-            $event->devotees()->attach($userId);
+            $devotional->devotees()->attach($userId);
             return response()->json(['data' => true]);
         }
-        $event->devotees()->detach($userId);
+        $devotional->devotees()->detach($userId);
         return response()->json(['data' => false]);
     }
 

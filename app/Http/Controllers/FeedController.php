@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AudioPost;
+use App\Models\Devotional;
 use App\Models\Event;
 use App\Models\Feed;
 use App\Models\Post;
@@ -18,10 +19,12 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class FeedController extends Controller
 {
+    private const FEED_TYPES = ['audio', 'video', 'post', 'event', 'devotional'];
+
     public function load(Request $request)
     {
-        $type = $request['type'];
-        if (!empty($type) && !in_array($type, ['audio', 'video', 'post', 'event'])) {
+        $type = $request['type'] ?? null;
+        if (!empty($type) && !in_array($type, self::FEED_TYPES)) {
             return response()->json('invalid feed type', 422);
         }
 
@@ -58,6 +61,12 @@ class FeedController extends Controller
                         },
                         'views'
                     ],
+                    Devotional::class => [
+                        'comments', 'likes', 'views',
+                        'likes as liked' => function (Builder $query) use ($userId) {
+                            $query->where('user_id', $userId);
+                        },
+                    ],
                 ]);
 
                 $morphTo->morphWith([
@@ -65,10 +74,11 @@ class FeedController extends Controller
                     VideoPost::class => ['user', 'poster', 'srcs'],
                     Post::class => ['user', 'poster'],
                     Event::class => ['poster', 'user'],
+                    Devotional::class => ['user', 'poster'],
                 ]);
             }
         ])
-
+            ->where('postable_type', 'user')
             ->whereIn('postable_id', $following)
             ->orderBy('created_at', 'desc');
         if (!empty($type)) {
@@ -87,13 +97,10 @@ class FeedController extends Controller
         ]);
 
         $tag = $request['tag'];
+        $type = $request['type'] ?? null;
         $user = Auth::user();
         $userId = $user->id;
         $query = $request['q'];
-
-        //    $tags = Tag::with('taggable')->get();
-        //    dd($tags);
-        // $following = $user->following()->pluck('user_id');
 
         $feeds = Feed::with([
             'parentable' => function (MorphTo $morphTo) use ($userId) {
@@ -123,6 +130,12 @@ class FeedController extends Controller
                         },
                         'views'
                     ],
+                    Devotional::class => [
+                        'comments', 'likes', 'views',
+                        'likes as liked' => function (Builder $query) use ($userId) {
+                            $query->where('user_id', $userId);
+                        },
+                    ],
                 ]);
 
                 $morphTo->morphWith([
@@ -130,18 +143,19 @@ class FeedController extends Controller
                     VideoPost::class => ['user', 'poster', 'srcs'],
                     Post::class => ['user', 'poster'],
                     Event::class => ['poster', 'user'],
+                    Devotional::class => ['user', 'poster'],
                 ]);
             }
         ])
             ->whereHasMorph(
                 'parentable',
-                ['post', 'event', 'audio', 'video'],
+                ['post', 'event', 'audio', 'video', 'devotional'],
                 function (Builder $query, string $type) use ($tag) {
                     $query->whereHas('tags', function ($query) use ($tag) {
                         $query->where('tag_id', $tag);
                     });
                 }
-            )            // ->whereIn('postable_id', $following)
+            )
             ->orderBy('created_at', 'desc');
 
         if (!empty($type)) {
@@ -160,12 +174,9 @@ class FeedController extends Controller
         ]);
 
         $profile_id = $request['user_id'];
+        $type = $request['type'] ?? null;
         $userId = Auth::id();
         $query = $request['q'];
-
-        //    $tags = Tag::with('taggable')->get();
-        //    dd($tags);
-        // $following = $user->following()->pluck('user_id');
 
         $feeds = Feed::with([
             'parentable' => function (MorphTo $morphTo) use ($userId) {
@@ -195,6 +206,12 @@ class FeedController extends Controller
                         },
                         'views'
                     ],
+                    Devotional::class => [
+                        'comments', 'likes', 'views',
+                        'likes as liked' => function (Builder $query) use ($userId) {
+                            $query->where('user_id', $userId);
+                        },
+                    ],
                 ]);
 
                 $morphTo->morphWith([
@@ -202,6 +219,7 @@ class FeedController extends Controller
                     VideoPost::class => ['user', 'poster', 'srcs'],
                     Post::class => ['user', 'poster'],
                     Event::class => ['poster', 'user'],
+                    Devotional::class => ['user', 'poster'],
                 ]);
             }
         ])
@@ -212,7 +230,7 @@ class FeedController extends Controller
             $feeds = $feeds->where('parentable_type', $type);
         }
         $length = (int)(empty($request['perPage']) ? 15 : $request['perPage']);
-   
+
         $feeds = $feeds->paginate($length);
         $result = new FeedCollection($feeds);
         return response()->json($result);
