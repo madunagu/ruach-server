@@ -98,6 +98,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/hierarchies',  [HierarchyController::class, 'list']);
     Route::post('/hierarchies', [HierarchyController::class, 'create']);
     Route::post('/hierarchies-multi', [HierarchyController::class, 'createMulti']);
+    Route::post('/hierarchies/reorder', [HierarchyController::class, 'reorder']);
     Route::get('/hierarchies/{id}', [HierarchyController::class, 'get']);
     Route::put('/hierarchies/{id}',  [HierarchyController::class, 'update']);
     Route::delete('/hierarchies/{id}', [HierarchyController::class, 'delete']);

@@ -25,4 +25,14 @@ class Hierarchy extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    /**
+     * The objects this hierarchy is linked to (posts, events, audio, video, devotionals).
+     */
+    public function hierarchyables()
+    {
+        return $this->morphToMany(
+            Post::class, 'hierarchyable', 'hierarchyables', 'hierarchy_id', 'hierarchyable_id'
+        )->withPivot('hierarchyable_type');
+    }
 }

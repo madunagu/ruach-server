@@ -25,7 +25,12 @@ class EventController extends Controller
             'church_id' => 'nullable|integer|exists:churches,id',
             'starting_at' => 'nullable|date',
             'ending_at' => 'nullable|date',
-            'hierarchy_group_id' => 'nullable|integer|exists:hierarchy_groups,id',
+            'image_ids' => 'nullable|array',
+            'image_ids.*' => 'nullable|integer|exists:images,id',
+            'tag_ids' => 'nullable|array',
+            'tag_ids.*' => 'nullable|integer|exists:tags,id',
+            'hierarchy_ids' => 'nullable|array',
+            'hierarchy_ids.*' => 'nullable|integer|exists:hierarchies,id',
         ]);
 
         // if ($validator->fails()) {
