@@ -8,11 +8,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Storage;
 use Validator;
 
-use Google\Cloud\Speech\V1\SpeechClient;
-use Google\Cloud\Speech\V1\RecognitionAudio;
-use Google\Cloud\Speech\V1\RecognitionConfig;
-use Google\Cloud\Speech\V1\RecognitionConfig\AudioEncoding;
-
 use wapmorgan\MediaFile\MediaFile;
 
 use App\Models\VideoPost;
@@ -21,17 +16,16 @@ use App\Traits\Interactable;
 use App\Models\VideoSrc;
 use App\Models\Feed;
 use App\Jobs\ProcessMediaVariants;
+use App\Services\LyricsService;
 
 class VideoPostController extends Controller
 {
     use Interactable;
-    public $shouldTransrcibe = false;
 
     public function create(Request $request)
     {
         $request->validate([
             'name' => 'string|required|max:255',
-            // 'src_url' => 'string|required|max:255',
             'full_text' => 'nullable|string',
             'description' => 'nullable|string|max:255',
             'church_id' => 'nullable|integer|exists:churches,id',
@@ -39,8 +33,7 @@ class VideoPostController extends Controller
             'length' => 'nullable|integer',
             'language' => 'nullable|string',
             'address_id' => 'nullable|integer|exists:addresses,id',
-            'video' => 'required',
-            'video.*' => 'mimes:mp4,mkv,avi,mov'
+            'video' => 'required|file|mimes:mp4,mkv,avi,mov,webm,wmv|max:204800',
         ]);
 
         $data = collect($request->all())->toArray();
@@ -49,38 +42,67 @@ class VideoPostController extends Controller
         $data['poster_id'] = $userId;
         $data['poster_type'] = 'user';
 
-        $video  = base64_decode($request['video']);
-        // $videoFile = Storage($video);
-        //TODO: parse the video extension from the base64encoded file
-        $name = time() . '.mp4';
+        $file = $request->file('video');
+        $extension = $file->extension() ?: 'mp4';
 
-        $fileMoved = Storage::disk('public')->put('video/full/' . $name, $video);
+        $name = time() . '-' . bin2hex(random_bytes(4)) . '.' . $extension;
         $path = 'video/full/' . $name;
-        $data['src_url'] =  Storage::disk('public')->url($path);
+
+        $fileMoved = Storage::disk('public')->putFileAs('video/full', $file, $name);
+        if (!$fileMoved) {
+            return response()->json(['data' => false, 'errors' => 'Failed to store video file.'], 500);
+        }
+
+        $data['src_url'] = Storage::disk('public')->url($path);
         $data['size'] = Storage::disk('public')->size($path);
 
         $details = $this->getTrackDetails($path);
-
-        $data['length'] = $details['length'];
+        $data['length'] = $details['length'] ?? null;
 
         $videoPost = VideoPost::create($data);
 
-        // Adaptive renditions (480p/720p) run async so uploads stay fast.
+        // Best-effort embedded-lyrics extraction (fast, no ext deps).
+        try {
+            $lyrics = app(LyricsService::class)->extractFromDisk($path);
+            if ($lyrics && empty($videoPost->full_text)) {
+                $videoPost->update([
+                    'full_text' => app(LyricsService::class)->normalize($lyrics, (int) $data['length']),
+                    'lyrics_status' => 'ready',
+                ]);
+            } elseif (!empty($videoPost->full_text)) {
+                $videoPost->update(['lyrics_status' => 'ready']);
+            }
+        } catch (\Throwable $e) {
+        }
+
+        // Adaptive renditions (480p/720p) + thumbnails run async so uploads stay fast.
         try {
             ProcessMediaVariants::dispatch('video', $videoPost->id, $path);
             $videoPost->update(['media_status' => 'processing']);
         } catch (\Throwable $e) {
         }
 
-        //for quick use adding feed here, can be removed later
-        $feedCreated = Feed::create(['parentable_type' => 'video', 'postable_type' => 'user', 'postable_id' => $userId, 'parentable_id' => $videoPost->id]);
+        Feed::create(['parentable_type' => 'video', 'postable_type' => 'user', 'postable_id' => $userId, 'parentable_id' => $videoPost->id]);
 
-
-        $src = VideoSrc::create(['length' => $details['length'], 'format' => 'mp4', 'src' => $data['src_url'], 'quality' => 1, 'size' => $data['size'], 'video_post_id' => $videoPost->id,]);
+        if ($details) {
+            VideoSrc::create([
+                'length' => $details['length'],
+                'format' => $extension,
+                'src' => $data['src_url'],
+                'quality' => $details['height'] ?? 0,
+                'width' => $details['width'] ?? null,
+                'height' => $details['height'] ?? null,
+                'size' => $data['size'],
+                'variant' => 'original',
+                'mime' => $file->getClientMimeType() ?? 'video/mp4',
+                'status' => 'ready',
+                'video_post_id' => $videoPost->id,
+            ]);
+        }
 
         $interacted = $this->saveRelated($data, $videoPost);
 
-        $result = VideoPost::with(['srcs',  'poster', 'user'])
+        $result = VideoPost::with(['srcs', 'poster', 'user'])
             ->with('hierarchies', 'addresses', 'tags', 'images', 'churches')
             ->withCount([
                 'comments',
@@ -95,93 +117,54 @@ class VideoPostController extends Controller
             ])
             ->find($videoPost->id);
 
-        if ($videoPost) {
+        if ($result) {
             return response()->json(['data' => $result], 201);
         } else {
             return response()->json(['data' => false, 'errors' => 'unknown error occured'], 400);
         }
     }
 
-    public function getTrackDetails(String $path): array
+    public function getTrackDetails(String $path): ?array
     {
         $storagePath = storage_path('app/public/' . $path);
+        if (!is_file($storagePath)) {
+            return null;
+        }
+
         try {
             $media = MediaFile::open($storagePath);
-            // for audio
-            if ($media->isAudio()) {
-                $audio = $media->getAudio();
-                return [
-                    'length' => $audio->getLength(),
-                    'bitrate' => $audio->getBitRate(),
-                    'refresh_rate' => $audio->getSampleRate(),
-                    'channels' => $audio->getChannels(),
-                ];
-            }
-            // for video
-            else {
+            if ($media->isVideo()) {
                 $video = $media->getVideo();
-                // calls to VideoAdapter interface
                 return [
                     'length' => $video->getLength(),
-                    // 'dimensions' => $video->getWidth() . 'x' . $video->getHeight(),
-                    // 'frame_rate' => $video->getFramerate(),
+                    'width' => $video->getWidth(),
+                    'height' => $video->getHeight(),
+                    'frame_rate' => $video->getFramerate(),
                 ];
             }
-        } catch (wapmorgan\MediaFile\Exceptions\FileAccessException $e) {
-            // FileAccessException throws when file is not a detected media
-        } catch (wapmorgan\MediaFile\Exceptions\ParsingException $e) {
-            echo 'File is propably corrupted: ' . $e->getMessage() . PHP_EOL;
+        } catch (\Throwable $e) {
+            // File is not a detectable media type — return null so callers
+            // can fall back gracefully instead of crashing.
         }
-        print('gettting track details');
-    }
 
+        return null;
+    }
 
     public function related(Request $request)
     {
-        $audio = VideoPost::find($request['id']);
-        //TODO: here use search plugin to list advanced related
-        $names = explode(' ', $audio->name);
-        $audia = VideoPost::where('name', 'like', $audio->name);
+        $video = VideoPost::find($request['id']);
+        if (!$video) {
+            return response()->json(['data' => false], 404);
+        }
+        $names = explode(' ', $video->name);
+        $videos = VideoPost::where('name', 'like', $video->name);
         foreach ($names as $key => $name) {
-            $audia->orWhere('name', 'like', "%$name%");
-            $audia->orWhere('description', 'like', "%$name%");
+            $videos->orWhere('name', 'like', "%$name%");
+            $videos->orWhere('description', 'like', "%$name%");
         }
-        $data = $audia->with('hierarchies')
-            ->whereNot('audio_posts.id', $audio->id)->paginate();
+        $data = $videos->with('hierarchies')
+            ->whereNot('video_posts.id', $video->id)->paginate();
         return response()->json($data);
-    }
-
-
-    public function getTrackFullText(VideoPost $audio): VideoPost
-    {
-        if ($this->shouldTransrcibe) {
-            //connect to google
-            $content = file_get_contents($audio->src_url);
-            $googleAudio = (new RecognitionAudio())->setContent($content);
-
-            # The audio file's encoding, sample rate and language
-            $config = new RecognitionConfig([
-                'encoding' => AudioEncoding::LINEAR16,
-                'sample_rate_hertz' => 32000,
-                'language_code' => 'en-US'
-            ]);
-
-            # Instantiates a client
-            $client = new SpeechClient();
-            # Detects speech in the audio file
-            $response = $client->recognize($config, $googleAudio);
-            # Print most likely transcription
-            foreach ($response->getResults() as $result) {
-                $alternatives = $result->getAlternatives();
-                $mostLikely = $alternatives[0];
-                $transcript = $mostLikely->getTranscript();
-                printf('Transcript: %s' . PHP_EOL, $transcript);
-            }
-            $client->close();
-            //change audio to text
-            //save it then return object
-        }
-        return $audio;
     }
 
     public function update(Request $request)
@@ -189,7 +172,6 @@ class VideoPostController extends Controller
         $validator = Validator::make($request->all(), [
             'id' => 'integer|required|exists:video_posts,id',
             'name' => 'string|required|max:255',
-            // 'src_url' => 'string|required|max:255',
             'full_text' => 'nullable|string',
             'description' => 'nullable|string|max:255',
             'church_id' => 'nullable|integer|exists:churches,id',
@@ -208,13 +190,15 @@ class VideoPostController extends Controller
         $data['user_id'] = $userId;
         $id = $request->route('id');
         $videoPost = VideoPost::find($id);
-        //update result
-        // $result = $this->getTrackDetails($result);
-        // $result = $this->getTrackFullText($result);
+
+        if (!$videoPost) {
+            return response()->json(['data' => false, 'errors' => 'video post not found'], 404);
+        }
+
         $interacted = $this->saveRelated($data, $videoPost);
         $result = $videoPost->update($data);
-        $result = VideoPost::with(['srcs',  'poster', 'user'])
-            ->with('hierarchies', 'addresses', 'tags', 'images',  'churches')
+        $result = VideoPost::with(['srcs', 'poster', 'user'])
+            ->with('hierarchies', 'addresses', 'tags', 'images', 'churches')
             ->withCount([
                 'comments',
                 'likes',
@@ -230,7 +214,7 @@ class VideoPostController extends Controller
 
 
         if ($result) {
-            return response()->json(['data' => $result], 201);
+            return response()->json(['data' => $result], 200);
         } else {
             return response()->json(['data' => false, 'errors' => 'unknown error occured'], 400);
         }
@@ -240,7 +224,7 @@ class VideoPostController extends Controller
     {
         $id = (int)$request->route('id');
         $userId = Auth::user()->id;
-        if ($audio = VideoPost::with(['srcs', 'images', 'user', 'churches', 'addresses', 'poster'])
+        if ($video = VideoPost::with(['srcs', 'images', 'user', 'churches', 'addresses', 'poster'])
             ->withCount([
                 'comments',
                 'likes',
@@ -255,7 +239,7 @@ class VideoPostController extends Controller
             ->find($id)
         ) {
             return response()->json([
-                'data' => $audio
+                'data' => $video
             ], 200);
         } else {
             return response()->json([
@@ -275,7 +259,7 @@ class VideoPostController extends Controller
         $userId = Auth::id();
 
         $query = $request['q'];
-        $audia = VideoPost::with(['images', 'user', 'poster'])
+        $videos = VideoPost::with(['images', 'user', 'poster'])
             ->withCount([
                 'comments',
                 'likes',
@@ -289,22 +273,18 @@ class VideoPostController extends Controller
             ]);
         $tag = $request['tag'];
         if ($tag) {
-            //This code gets only a single tag
-            if ($tag) {
-                $audia = $audia->whereHas('tags', function ($query) use ($tag) {
-                    $query->where('tag_id', $tag);
-                });
-            }
+            $videos = $videos->whereHas('tags', function ($query) use ($tag) {
+                $query->where('tag_id', $tag);
+            });
         }
         if ($query) {
-            $audia = $audia->search($query);
+            $videos = $videos->search($query);
         }
 
-        $audia->orderBy('video_posts.created_at', 'DESC');
-        //here insert search parameters and stuff
+        $videos->orderBy('video_posts.created_at', 'DESC');
         $length = (int)(empty($request['perPage']) ? 15 : $request['perPage']);
-        $audia = $audia->paginate($length);
-        $data = new AudioPostCollection($audia);
+        $videos = $videos->paginate($length);
+        $data = new AudioPostCollection($videos);
         return response()->json($data);
     }
 
@@ -312,8 +292,8 @@ class VideoPostController extends Controller
     public function delete(Request $request)
     {
         $id = (int)$request->route('id');
-        if ($audio = VideoPost::find($id)) {
-            $audio->delete();
+        if ($video = VideoPost::find($id)) {
+            $video->delete();
             return response()->json([
                 'data' => true
             ], 200);

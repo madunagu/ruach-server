@@ -8,33 +8,25 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
 use Validator;
 
-use Google\Cloud\Speech\V1\SpeechClient;
-use Google\Cloud\Speech\V1\RecognitionAudio;
-use Google\Cloud\Speech\V1\RecognitionConfig;
-use Google\Cloud\Speech\V1\RecognitionConfig\AudioEncoding;
-
 use App\Models\AudioPost;
 use App\Models\AudioSrc;
+use App\Models\Image;
 use App\Traits\Interactable;
 use App\Models\Feed;
 use App\Http\Resources\AudioPostCollection;
 use App\Jobs\ProcessMediaVariants;
 use App\Services\LyricsService;
-// use wapmorgan\Mp3Info\Mp3Info;
+use App\Services\MediaVariantService;
 use wapmorgan\MediaFile\MediaFile;
-// use wapmorgan\MediaFile\Exceptions;
 
 class AudioPostController extends Controller
 {
     use Interactable;
 
-    public $shouldTransrcibe = false;
-
     public function create(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'string|required|max:255',
-            // 'src_url' => 'string|required|max:255',
             'full_text' => 'nullable|string',
             'description' => 'nullable|string|max:255',
             'church_id' => 'nullable|integer|exists:churches,id',
@@ -42,14 +34,12 @@ class AudioPostController extends Controller
             'length' => 'nullable|integer',
             'language' => 'nullable|string',
             'address_id' => 'nullable|integer|exists:addresses,id',
-            'audio' => 'required',
-            'audio.*' => 'mimes:mp3,wmv,amr,m4a'
+            'audio' => 'required|file|mimes:mp3,wav,m4a,wma,aac,flac,amr,ogg|max:51200',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->messages(), 422);
         }
-
 
         $data = collect($request->all())->toArray();
 
@@ -58,22 +48,24 @@ class AudioPostController extends Controller
         $data['poster_id'] = $userId;
         $data['poster_type'] = 'user';
 
-        //TODO: parse the audio extension from the base64encoded file
-        $name = time() . '.mp3';
+        $file = $request->file('audio');
+        $extension = strtolower($file->getClientMimeType()) === 'audio/mpeg' ? 'mp3' : $file->extension();
+        $extension = $extension ?: 'mp3';
 
-        $audio  = base64_decode($request['audio']);
-        $fileMoved = Storage::disk('public')->put('audio/full/' . $name, $audio);
+        $name = time() . '-' . bin2hex(random_bytes(4)) . '.' . $extension;
         $path = 'audio/full/' . $name;
-        $data['src_url'] =  Storage::disk('public')->url($path);
+
+        $fileMoved = Storage::disk('public')->putFileAs('audio/full', $file, $name);
+        if (!$fileMoved) {
+            return response()->json(['data' => false, 'errors' => 'Failed to store audio file.'], 500);
+        }
+
+        $data['src_url'] = Storage::disk('public')->url($path);
         $data['size'] = Storage::disk('public')->size($path);
 
-        // This commented out because it works only for multi-part form data
-        //  $path = $request->file('audio')->store('public/audio/full');
-        //  $data['src_url'] = env('APP_URL').Storage::url($path);
-
         $res = $this->getTrackDetails($path);
+        $data['length'] = $res['length'] ?? null;
 
-        $data['length'] = round($res['length']);
         $audio = AudioPost::create($data);
 
         // Best-effort embedded-lyrics extraction (fast, no ext deps).
@@ -90,6 +82,24 @@ class AudioPostController extends Controller
         } catch (\Throwable $e) {
         }
 
+        // Extract album art (ID3 APIC frame) and attach to the post's images.
+        try {
+            $albumArt = app(MediaVariantService::class)->extractAlbumArt($path);
+            if ($albumArt !== null) {
+                $artPath = 'images/album-art/' . $name . '.jpg';
+                Storage::disk('public')->put($artPath, $albumArt);
+                $image = Image::create([
+                    'full' => Storage::disk('public')->url($artPath),
+                    'large' => Storage::disk('public')->url($artPath),
+                    'medium' => Storage::disk('public')->url($artPath),
+                    'small' => Storage::disk('public')->url($artPath),
+                    'user_id' => $userId,
+                ]);
+                $audio->images()->attach($image->id);
+            }
+        } catch (\Throwable $e) {
+        }
+
         // Heavy ffmpeg variants run async so uploads stay fast.
         try {
             ProcessMediaVariants::dispatch('audio', $audio->id, $path);
@@ -98,19 +108,25 @@ class AudioPostController extends Controller
         }
 
         $interacted = $this->saveRelated($data, $audio);
-        //for quick use adding feed here, can be removed later
 
-        $feedCreated = Feed::create(['parentable_type' => 'audio', 'postable_type' => 'user', 'postable_id' => $userId, 'parentable_id' => $audio->id]);
-        //obtain length,size and details of audio
-        //get lyrics from audio
-        // $audio = $this->getTrackFullText($audio);
+        Feed::create(['parentable_type' => 'audio', 'postable_type' => 'user', 'postable_id' => $userId, 'parentable_id' => $audio->id]);
 
-        //TODO: complete later
         if ($res) {
-            $src = AudioSrc::create(['length' => $res['length'], 'refresh_rate' => $res['refresh_rate'], 'bitrate' => $res['bitrate'], 'src' => $data['src_url'], 'size' => $data['size'], 'format' => 'mp3', 'audio_post_id' => $audio->id,]);
+            AudioSrc::create([
+                'length' => $res['length'],
+                'refresh_rate' => $res['refresh_rate'],
+                'bitrate' => $res['bitrate'],
+                'src' => $data['src_url'],
+                'size' => $data['size'],
+                'format' => $extension,
+                'variant' => 'original',
+                'mime' => $file->getClientMimeType() ?? 'audio/mpeg',
+                'status' => 'ready',
+                'audio_post_id' => $audio->id,
+            ]);
         }
-        $audio = AudioPost::with(['srcs',  'poster', 'tags', 'images', 'user', 'churches', 'addresses'])
 
+        $audio = AudioPost::with(['srcs', 'poster', 'tags', 'images', 'user', 'churches', 'addresses'])
             ->with(['hierarchies' => [
                 'user',
             ]])->withCount([
@@ -132,12 +148,15 @@ class AudioPostController extends Controller
         }
     }
 
-    public function getTrackDetails(String $path): array
+    public function getTrackDetails(String $path): ?array
     {
         $storagePath = storage_path('app/public/' . $path);
+        if (!is_file($storagePath)) {
+            return null;
+        }
+
         try {
             $media = MediaFile::open($storagePath);
-            // for audio
             if ($media->isAudio()) {
                 $audio = $media->getAudio();
                 return [
@@ -147,78 +166,12 @@ class AudioPostController extends Controller
                     'channels' => $audio->getChannels(),
                 ];
             }
-            // for video
-            else {
-                $video = $media->getVideo();
-                // calls to VideoAdapter interface
-                return [
-                    'length' => $video->getLength(),
-                    'dimensions' => $video->getWidth() . 'x' . $video->getHeight(),
-                    'frame_rate' => $video->getFramerate(),
-                ];
-            }
-        } catch (wapmorgan\MediaFile\Exceptions\FileAccessException $e) {
-            // FileAccessException throws when file is not a detected media
-        } catch (wapmorgan\MediaFile\Exceptions\ParsingException $e) {
-            echo 'File is propably corrupted: ' . $e->getMessage() . PHP_EOL;
-        }
-        print('gettting track details');
-    }
-
-    public function getTrackFullText(AudioPost $audio): AudioPost
-    {
-        // Hook: embedded lyrics -> Whisper (when OPENAI_API_KEY set).
-        // Legacy Google Speech path kept behind $shouldTransrcibe.
-        try {
-            $diskPath = $audio->src_url ? $this->diskPathFromUrl($audio->src_url) : null;
-            if (empty($audio->full_text) && $diskPath) {
-                $text = app(\App\Services\TranscriptionService::class)
-                    ->transcribeDiskPath($diskPath, (int) $audio->length);
-                if ($text) {
-                    $audio->update(['full_text' => $text, 'lyrics_status' => 'ready']);
-                    return $audio->fresh() ?? $audio;
-                }
-            }
         } catch (\Throwable $e) {
+            // File is not a detectable media type — return null so callers
+            // can fall back gracefully instead of crashing.
         }
-        if ($this->shouldTransrcibe) {
-            //connect to google
-            $content = file_get_contents($audio->src_url);
-            $googleAudio = (new RecognitionAudio())->setContent($content);
 
-            # The audio file's encoding, sample rate and language
-            $config = new RecognitionConfig([
-                'encoding' => AudioEncoding::LINEAR16,
-                'sample_rate_hertz' => 32000,
-                'language_code' => 'en-US'
-            ]);
-
-            # Instantiates a client
-            $client = new SpeechClient();
-            # Detects speech in the audio file
-            $response = $client->recognize($config, $googleAudio);
-            # Print most likely transcription
-            foreach ($response->getResults() as $result) {
-                $alternatives = $result->getAlternatives();
-                $mostLikely = $alternatives[0];
-                $transcript = $mostLikely->getTranscript();
-                printf('Transcript: %s' . PHP_EOL, $transcript);
-            }
-            $client->close();
-            //change audio to text
-            //save it then return object
-        }
-        return $audio;
-    }
-
-    private function diskPathFromUrl(string $url): ?string
-    {
-        // Storage::url() => /storage/<rel>. Reverse it for local disk access.
-        $pos = strpos($url, '/storage/');
-        if ($pos === false) {
-            return null;
-        }
-        return ltrim(substr($url, $pos + strlen('/storage/')), '/');
+        return null;
     }
 
     public function update(Request $request)
@@ -226,7 +179,6 @@ class AudioPostController extends Controller
         $validator = Validator::make($request->all(), [
             'id' => 'integer|required|exists:audio_posts,id',
             'name' => 'string|required|max:255',
-            // 'src_url' => 'string|required|max:255',
             'full_text' => 'nullable|string',
             'description' => 'nullable|string|max:255',
             'church_id' => 'nullable|integer|exists:churches,id',
@@ -245,14 +197,15 @@ class AudioPostController extends Controller
         $userId = Auth::id();
         $id = $request->route('id');
         $audio = AudioPost::find($id);
-        // $details = $this->getTrackDetails($result);
-        // $result = $this->getTrackFullText($result);
-        //update result
+
+        if (!$audio) {
+            return response()->json(['data' => false, 'errors' => 'audio post not found'], 404);
+        }
+
         $result = $audio->update($data);
         $interacted = $this->saveRelated($data, $audio);
-  
-        $result = AudioPost::with(['srcs',  'poster', 'tags', 'images', 'user', 'churches', 'addresses'])
 
+        $result = AudioPost::with(['srcs', 'poster', 'tags', 'images', 'user', 'churches', 'addresses'])
             ->with(['hierarchies' => [
                 'user',
             ]])->withCount([
@@ -269,7 +222,7 @@ class AudioPostController extends Controller
 
 
         if ($result) {
-            return response()->json(['data' => $result], 201);
+            return response()->json(['data' => $result], 200);
         } else {
             return response()->json(['data' => false, 'errors' => 'unknown error occured'], 400);
         }
@@ -279,8 +232,8 @@ class AudioPostController extends Controller
     {
         $id = (int)$request->route('id');
         $userId = Auth::user()->id;
-        if ($audio = AudioPost::with(['srcs',  'poster', 'user'])
-            ->with('addresses', 'tags', 'images',  'churches')
+        if ($audio = AudioPost::with(['srcs', 'poster', 'user'])
+            ->with('addresses', 'tags', 'images', 'churches')
             ->with(['hierarchies' => [
                 'user',
             ]])
@@ -330,24 +283,11 @@ class AudioPostController extends Controller
         $tag = $request['tag'];
         $tags = $request['tag_ids'];
         if ($tag || $tags) {
-            //This code gets only a single tag
             if ($tag) {
                 $audia = $audia->whereHas('tags', function ($query) use ($tag) {
                     $query->where('tag_id', $tag);
                 });
             }
-            //This commented out code gets multiple ids multiple ands
-
-            // foreach ($tags as $value) {
-            //     $audia->whereHas('tags', function ($query) use ($value) {
-            //         $query->where('tag_id', $value);
-            //     });
-            // }
-
-            //this gets tags with multiple ors
-            // $auida = $audia->whereHas('tags', function ($q) use ($tags) {
-            //     $q->whereIn('tag_id', $tags);
-            // });
         }
 
         if ($query) {
@@ -356,7 +296,6 @@ class AudioPostController extends Controller
 
         $audia->orderBy('audio_posts.created_at', 'DESC');
 
-        //here insert search parameters and stuff
         $length = (int)(empty($request['perPage']) ? 15 : $request['perPage']);
         $audia = $audia->paginate($length);
         $data = new AudioPostCollection($audia);
@@ -365,9 +304,10 @@ class AudioPostController extends Controller
 
     public function related(Request $request)
     {
-
         $audio = AudioPost::find((int)$request['id']);
-        //TODO: here use search plugin to list advanced related
+        if (!$audio) {
+            return response()->json(['data' => false], 404);
+        }
         $names = explode(' ', $audio->name);
         $audia = AudioPost::where('name', 'like', $audio->name);
         foreach ($names as $key => $name) {
