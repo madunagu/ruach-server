@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Comment;
+use App\Services\ActivityNotifier;
 use App\Traits\Interactable;
 use App\Traits\Orderable;
 use Illuminate\Support\Facades\DB;
@@ -34,7 +35,16 @@ class CommentController extends Controller
 
         $comment = Comment::create($data);
         $result = Comment::with('user')->withCount('likes')->find($comment->id);
-        //TODO: notify relevant users of activity
+
+        // Tell whoever the comment was aimed at. Resolving the subject is
+        // best-effort so a missing or renamed morph type cannot fail the write.
+        try {
+            $subject = $comment->commentable()->first();
+        } catch (\Throwable $e) {
+            report($e);
+            $subject = null;
+        }
+        app(ActivityNotifier::class)->commented($comment->user_id, $comment, $subject);
 
         if ($result) {
             return response()->json(['data' => $result], 201);

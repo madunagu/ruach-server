@@ -17,6 +17,7 @@ use App\Http\Controllers\FeedController;
 use App\Http\Controllers\HierarchyController;
 use App\Http\Controllers\HierarchyTreeController;
 use App\Http\Controllers\ImageController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\SocietyController;
 use App\Http\Controllers\TagController;
@@ -126,6 +127,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/users/{id}',  [UserController::class, 'update']);
     Route::delete('/users/{id}',  [UserController::class, 'delete']);
     Route::post('/users/{id}',  [UserController::class, 'follow']);
+
+    // Notifications for the authenticated user only.
+    Route::get('/notifications', [NotificationController::class, 'list']);
+    Route::get('/notifications/counts', [NotificationController::class, 'counts']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'readAll']);
+    Route::get('/notifications/{id}', [NotificationController::class, 'get']);
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'read']);
+    Route::delete('/notifications/{id}', [NotificationController::class, 'delete']);
 
     Route::get('/comments',  [CommentController::class, 'list']);
     Route::post('/comments',  [CommentController::class, 'create']);

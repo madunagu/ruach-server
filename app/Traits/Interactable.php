@@ -13,6 +13,7 @@ use App\Http\Controllers\VideoPostController;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\ActivityNotifier;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -76,6 +77,28 @@ trait Interactable
                     'likeable_type' => $type
                 ]
             );
+
+            // Tell the content owner, but only if the row still resolves.
+            $subject = null;
+            try {
+                $subject = $this->models[static::class];
+                $class = [
+                    'audio' => \App\Models\AudioPost::class,
+                    'video' => \App\Models\VideoPost::class,
+                    'post' => \App\Models\Post::class,
+                    'event' => \App\Models\Event::class,
+                    'devotional' => \App\Models\Devotional::class,
+                ][$type] ?? null;
+                if ($class !== null) {
+                    $subject = $class::find($id);
+                }
+            } catch (\Throwable $e) {
+                report($e);
+                $subject = null;
+            }
+
+            app(ActivityNotifier::class)->liked($user_id, $subject, $type);
+
             return response()->json(['data' => true], 200);
         }
     }

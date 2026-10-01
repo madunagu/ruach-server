@@ -10,6 +10,7 @@ use Validator;
 use App\Models\Event;
 use App\Models\Feed;
 use App\Http\Resources\EventCollection;
+use App\Services\ActivityNotifier;
 use App\Traits\Interactable;
 use Illuminate\Support\Facades\DB;
 
@@ -207,7 +208,8 @@ class EventController extends Controller
         $userId = Auth::id();
         $event = Event::find((int)$id);
         if ($tog) {
-            $event->attendees()->attach($userId);
+            $event->attendees()->syncWithoutDetaching([$userId]);
+            app(ActivityNotifier::class)->attending($userId, $event);
             return response()->json(['data' => true]);
         }
         $event->attendees()->detach($userId);

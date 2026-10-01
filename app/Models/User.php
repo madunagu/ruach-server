@@ -91,4 +91,21 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Event::class, 'event_user');
     }
+
+    /**
+     * Notifications addressed to this user.
+     *
+     * @see \App\Models\Notification
+     */
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class, 'notifiable_id')
+            ->where('notifiable_type', 'user');
+    }
+
+    /** The subset the client has not opened yet. */
+    public function unreadNotifications()
+    {
+        return $this->notifications()->whereNull('read_at');
+    }
 }

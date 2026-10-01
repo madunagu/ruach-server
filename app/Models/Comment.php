@@ -21,6 +21,16 @@ class Comment extends Model
         return $this->morphMany(Like::class, 'likeable');
     }
 
+    /**
+     * The comment this one replies to.
+     *
+     * @see \App\Services\ActivityNotifier::commented
+     */
+    public function parent()
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
+
     public function user(){
         return $this->belongsTo(User::class);
     }

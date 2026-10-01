@@ -8,6 +8,7 @@ use Validator;
 use App\Models\User;
 use App\Models\Event;
 use App\Models\Image;
+use App\Services\ActivityNotifier;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -120,13 +121,15 @@ class UserController extends Controller
                 'likes',
                 'followers',
                 'messages',
+                // Drives the badge the client already renders; previously
+                // commented out, so the count was always absent.
+                'unreadNotifications as notifications_count',
                 'followers as is_following' => function (Builder $query) use ($id) {
                     $query->where('user_id', $id);
                 },
             ])
             ->find($id)
         ) {
-            // $user['notification_count'] = Auth::user()->unreadNotifications()->count();
             return response()->json(
                 $user,
                 200
@@ -212,7 +215,10 @@ class UserController extends Controller
         $myUserId = Auth::id();
         $userToFollow = User::find((int)$userToFollowId);
         if ($tog) {
-            $userToFollow->followers()->attach($myUserId);
+            // syncWithoutDetaching so a retried tap cannot fail on the pivot's
+            // unique key, and does not duplicate an existing follow.
+            $userToFollow->followers()->syncWithoutDetaching([$myUserId]);
+            app(ActivityNotifier::class)->followed($myUserId, (int) $userToFollowId);
             return response()->json(['data' => true]);
         }
         //IF the  request is to unfollow
