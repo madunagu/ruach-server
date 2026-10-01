@@ -384,19 +384,27 @@ class FaithContentSeeder extends Seeder
                 ],
             );
             AudioSrc::where('audio_post_id', $post->id)->delete();
-            AudioSrc::create([
-                'refresh_rate' => 44100,
-                'bitrate' => 128,
-                'src' => $data['url'],
-                'size' => $post->size,
-                'length' => $data['length'],
-                'format' => 'mp3',
-                'quality' => 'demo',
-                'variant' => 'original',
-                'mime' => 'audio/mpeg',
-                'status' => 'ready',
-                'audio_post_id' => $post->id,
-            ]);
+            // Three renditions per track so the client's quality picker has a
+            // real ascending list to offer instead of a single option.
+            foreach ([
+                ['variant' => 'low', 'bitrate' => 64, 'quality' => 'low'],
+                ['variant' => 'standard', 'bitrate' => 128, 'quality' => 'standard'],
+                ['variant' => 'original', 'bitrate' => 320, 'quality' => 'demo'],
+            ] as $rendition) {
+                AudioSrc::create([
+                    'refresh_rate' => 44100,
+                    'bitrate' => $rendition['bitrate'],
+                    'src' => $data['url'],
+                    'size' => (int) ($post->size * ($rendition['bitrate'] / 320)),
+                    'length' => $data['length'],
+                    'format' => 'mp3',
+                    'quality' => $rendition['quality'],
+                    'variant' => $rendition['variant'],
+                    'mime' => 'audio/mpeg',
+                    'status' => 'ready',
+                    'audio_post_id' => $post->id,
+                ]);
+            }
             $post->tags()->sync($this->tagIds(['worship', $data['verse'], 'song']));
             $post->churches()->sync([$churches[$data['church']]->id]);
             $post->addresses()->sync([$addresses[$data['address']]->id]);
@@ -465,20 +473,28 @@ class FaithContentSeeder extends Seeder
                 ],
             );
             VideoSrc::where('video_post_id', $post->id)->delete();
-            VideoSrc::create([
-                'src' => $data['url'],
-                'quality' => 720,
-                'size' => $post->size,
-                'length' => $data['length'],
-                'format' => 'mp4',
-                'dimensions' => '1280x720',
-                'width' => 1280,
-                'height' => 720,
-                'variant' => 'original',
-                'mime' => 'video/mp4',
-                'status' => 'ready',
-                'video_post_id' => $post->id,
-            ]);
+            // Three resolutions per clip so the quality picker has a real list,
+            // ordered lowest to highest by height on the client.
+            foreach ([
+                ['variant' => '480p', 'height' => 480, 'width' => 854],
+                ['variant' => '720p', 'height' => 720, 'width' => 1280],
+                ['variant' => 'original', 'height' => 1080, 'width' => 1920],
+            ] as $rendition) {
+                VideoSrc::create([
+                    'src' => $data['url'],
+                    'quality' => $rendition['height'],
+                    'size' => (int) ($post->size * ($rendition['height'] / 1080)),
+                    'length' => $data['length'],
+                    'format' => 'mp4',
+                    'dimensions' => $rendition['width'] . 'x' . $rendition['height'],
+                    'width' => $rendition['width'],
+                    'height' => $rendition['height'],
+                    'variant' => $rendition['variant'],
+                    'mime' => 'video/mp4',
+                    'status' => 'ready',
+                    'video_post_id' => $post->id,
+                ]);
+            }
             $post->tags()->sync($this->tagIds(['teaching', $data['verse'], 'video']));
             $post->churches()->sync([$churches[$data['church']]->id]);
             $post->addresses()->sync([$addresses[$data['address']]->id]);
