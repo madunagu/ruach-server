@@ -26,6 +26,10 @@ class AppServiceProvider extends ServiceProvider
             'audio' => 'App\Models\AudioPost',
             'church' => 'App\Models\Church',
             'comment' => 'App\Models\Comment',
+            // Feeds store 'devotional' in parentable_type; without this alias
+            // resolving that morph throws "Class devotional not found" and the
+            // whole feed request fails.
+            'devotional' => 'App\Models\Devotional',
             'event' => 'App\Models\Event',
             'info_card' => 'App\Models\InfoCard',
             'like' => 'App\Models\Like',

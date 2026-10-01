@@ -45,12 +45,21 @@ class ImageController extends Controller
                 // Read file contents directly (works in HTTP context).
                 $image = $manager->read($file->get());
 
-                $image->resize(width: 500);
-                $image->save(storage_path('app/public/images/large/' . $name));
-                $image->resize(width: 200);
-                $image->save(storage_path('app/public/images/medium/' . $name));
-                $image->resize(width: 100);
-                $image->save(storage_path('app/public/images/small/' . $name));
+                // Resize from the full image each time so every variant is
+                // derived from the original rather than from a chain of
+                // progressive downscales, which compounds quality loss.
+                //
+                // `resize` would force the exact width, distorting anything
+                // that is already narrower and upscaling small originals.
+                // `scaleDown` fits the image inside the box, preserving the
+                // aspect ratio and never enlarging it.
+                foreach ([['large', 500], ['medium', 200], ['small', 100]] as [$variant, $width]) {
+                    $resize = (clone $image)->scaleDown(width: $width);
+                    $disk->put(
+                        'images/' . $variant . '/' . $name,
+                        (string) $resize->encodeByExtension('jpg', quality: 85)
+                    );
+                }
                 $createdPaths = [
                     'images/full/' . $name,
                     'images/large/' . $name,
@@ -58,6 +67,7 @@ class ImageController extends Controller
                     'images/small/' . $name,
                 ];
             } catch (\Throwable $e) {
+                report($e);
                 foreach ($createdPaths as $createdPath) {
                     $disk->delete($createdPath);
                 }
