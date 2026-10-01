@@ -61,6 +61,9 @@ class VideoPostController extends Controller
 
         $videoPost = VideoPost::create($data);
 
+        // Adopt any relations the client saved against this draft's uuid.
+        $videoPost->claimDraftRelations();
+
         // Best-effort embedded-lyrics extraction (fast, no ext deps).
         try {
             $lyrics = app(LyricsService::class)->extractFromDisk($path);
@@ -259,7 +262,7 @@ class VideoPostController extends Controller
         $userId = Auth::id();
 
         $query = $request['q'];
-        $videos = VideoPost::with(['images', 'user', 'poster'])
+        $videos = VideoPost::with(['images', 'user', 'poster', 'srcs'])
             ->withCount([
                 'comments',
                 'likes',

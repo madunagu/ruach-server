@@ -32,6 +32,10 @@ class PostController extends Controller
         $data['poster_type'] = 'user';
 
         $post = Post::create($data);
+
+        // Adopt any relations the client saved against this draft's uuid.
+        $post->claimDraftRelations();
+
         $interacted = $this->saveRelated($data, $post);
   
         //TODO: notify relevant users of activity

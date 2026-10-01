@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 use App\Traits\Searchable as SearchableTrait;
+use App\Traits\HasUuid;
 
 class Event extends Model
 {
-    use SearchableTrait, SoftDeletes, HasFactory;
+    use SearchableTrait, SoftDeletes, HasFactory, HasUuid;
 
     /**
      * Searchable rules.
@@ -33,6 +34,7 @@ class Event extends Model
     ];
 
     protected $fillable = [
+        'uuid',
         'name', 'starting_at', 'ending_at', 'description', 'user_id', 'poster_id', 'poster_type',
     ];
 

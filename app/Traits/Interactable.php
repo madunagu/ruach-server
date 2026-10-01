@@ -13,6 +13,8 @@ use App\Http\Controllers\VideoPostController;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 use App\Models\Like;
 
@@ -33,21 +35,27 @@ trait Interactable
     {
         //TODO: check if method exist to avoid obvios errors on these
         //TODO: remove previous relationships before adding new
+        //
+        // `syncWithoutDetaching` rather than `attach`: a draft may already have
+        // linked these rows by uuid, and claimDraftRelations() has just moved
+        // them onto the real key. Plain attach would then insert a duplicate
+        // pivot row for every one of them.
         if (!empty($data['church_id'])) {
-            $created->churches()->attach((int)$data['church_id']);
+            $created->churches()->syncWithoutDetaching([(int) $data['church_id']]);
         }
         if (!empty($data['address_ids'])) {
-            $created->addresses()->attach($data['address_ids']);
+            $created->addresses()->syncWithoutDetaching($data['address_ids']);
         }
         if (!empty($data['image_ids'])) {
-            $created->images()->attach($data['image_ids']);
+            $created->images()->syncWithoutDetaching($data['image_ids']);
         }
         if (!empty($data['tag_ids'])) {
-            $created->tags()->attach($data['tag_ids']);
+            $created->tags()->syncWithoutDetaching($data['tag_ids']);
         }
         if (!empty($data['hierarchy_ids'])) {
-            $created->hierarchies()->attach($data['hierarchy_ids']);
+            $created->hierarchies()->syncWithoutDetaching($data['hierarchy_ids']);
         }
+
         return $data;
     }
 

@@ -36,6 +36,9 @@ class DevotionalController extends Controller
         $data['poster_type'] = 'user';
         $result = Devotional::create($data);
 
+        // Adopt any relations the client saved against this draft's uuid.
+        $result->claimDraftRelations();
+
         // Add to feed so followers see devotionals.
         Feed::create(['parentable_type' => 'devotional', 'postable_type' => 'user', 'postable_id' => $userId, 'parentable_id' => $result->id]);
 

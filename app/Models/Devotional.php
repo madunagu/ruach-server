@@ -8,12 +8,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 use App\Traits\Searchable as SearchableTrait;
+use App\Traits\HasUuid;
 
 class Devotional extends Model
 {
-    use SearchableTrait, SoftDeletes, HasFactory;
+    use SearchableTrait, SoftDeletes, HasFactory, HasUuid;
 
-    protected $fillable = ['title', 'opening_prayer', 'closing_prayer', 'body', 'memory_verse', 'day', 'poster_id', 'poster_type', 'user_id'];
+    protected $fillable = ['title', 'opening_prayer', 'closing_prayer', 'body', 'memory_verse', 'day', 'poster_id', 'poster_type', 'user_id', 'uuid'];
 
     public function images()
     {

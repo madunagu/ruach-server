@@ -17,7 +17,17 @@ class HierarchyController extends Controller
             'name' => 'required|string|max:255',
             'user_id' => 'nullable|integer|exists:users,id',
             'hierarchyable_type' => 'nullable|string|in:post,event,audio,video,devotional',
-            'hierarchyable_id' => 'nullable|integer',
+            // Numeric primary key of a saved row, or a draft uuid.
+            'hierarchyable_id' => ['nullable', function ($attribute, $value, $fail) {
+                if ($value === null || $value === '') {
+                    return;
+                }
+                $value = (string) $value;
+                if (ctype_digit($value) || \App\Models\Event::isUsableUuid($value)) {
+                    return;
+                }
+                $fail('The ' . $attribute . ' must be an integer id or a valid uuid.');
+            }],
         ]);
 
         if ($validator->fails()) {
@@ -25,6 +35,7 @@ class HierarchyController extends Controller
         }
 
         $data = collect($request->all())->toArray();
+        unset($data['hierarchyable_type'], $data['hierarchyable_id']);
 
         // Auto-assign rank to the end of the list when not provided.
         if (empty($data['rank'])) {
@@ -34,8 +45,14 @@ class HierarchyController extends Controller
         $result = Hierarchy::create($data);
 
         // Link to the parent object when provided.
-        if ($result && !empty($data['hierarchyable_type']) && !empty($data['hierarchyable_id'])) {
-            $this->linkToObject($result->id, $data['hierarchyable_type'], (int) $data['hierarchyable_id']);
+        if ($result && !empty($request['hierarchyable_type']) && !empty($request['hierarchyable_id'])) {
+            $this->linkToObject(
+                $result->id,
+                $this->resolveReference(
+                    $request['hierarchyable_type'],
+                    (string) $request['hierarchyable_id']
+                )
+            );
         }
 
         if ($result) {
@@ -60,7 +77,20 @@ class HierarchyController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'hierarchyable_type' => 'required|string|in:post,event,audio,video,devotional',
-            'hierarchyable_id' => 'required|integer',
+            // Accepts the numeric primary key of a saved row or the uuid
+            // minted for an unsaved draft. The draft path matters for a create
+            // form: the hierarchy is saved before its parent row exists, and
+            // the uuid is what links them.
+            'hierarchyable_id' => ['required', function ($attribute, $value, $fail) {
+                $value = (string) $value;
+                if (ctype_digit($value)) {
+                    return;
+                }
+                if (\App\Models\Event::isUsableUuid($value)) {
+                    return;
+                }
+                $fail('The ' . $attribute . ' must be an integer id or a valid uuid.');
+            }],
             'hierarchies' => 'required|array|min:1',
             'hierarchies.*.rank' => 'nullable|integer',
             'hierarchies.*.name' => 'required|string|max:255',
@@ -72,20 +102,19 @@ class HierarchyController extends Controller
         }
 
         $type = $request['hierarchyable_type'];
-        $id = (int) $request['hierarchyable_id'];
         $items = $request['hierarchies'];
 
-        return DB::transaction(function () use ($type, $id, $items) {
-            // 1. Delete previous hierarchy links for this object.
-            $oldHierarchyIds = DB::table('hierarchyables')
-                ->where('hierarchyable_type', $type)
-                ->where('hierarchyable_id', $id)
+        return DB::transaction(function () use ($type, $items, $request) {
+            $reference = $this->resolveReference(
+                $type,
+                (string) $request['hierarchyable_id']
+            );
+
+            // 1. Replace any previous links for this object.
+            $oldHierarchyIds = $this->pivotQuery($reference)
                 ->pluck('hierarchy_id');
 
-            DB::table('hierarchyables')
-                ->where('hierarchyable_type', $type)
-                ->where('hierarchyable_id', $id)
-                ->delete();
+            $this->pivotQuery($reference)->delete();
 
             // Detach the old hierarchy rows themselves (they are no longer linked).
             if ($oldHierarchyIds->isNotEmpty()) {
@@ -102,7 +131,7 @@ class HierarchyController extends Controller
                 }
 
                 $hierarchy = Hierarchy::create($item);
-                $this->linkToObject($hierarchy->id, $type, $id);
+                $this->linkToObject($hierarchy->id, $reference);
                 $created[] = $hierarchy;
             }
 
@@ -110,6 +139,56 @@ class HierarchyController extends Controller
 
             return response()->json(['data' => $hierarchies], 201);
         });
+    }
+
+    /**
+     * Splits the client-supplied parent reference into the columns that link it.
+     *
+     * A numeric value is the primary key of a saved row. A uuid is a draft
+     * whose row does not exist yet, so it is stored in `hierarchyable_uuid`
+     * and claimed once the parent is created.
+     *
+     * @return array{type: string, id: int|null, uuid: string|null}
+     */
+    private function resolveReference(string $type, string $reference): array
+    {
+        if (ctype_digit($reference)) {
+            return [
+                'type' => $type,
+                'id' => (int) $reference,
+                'uuid' => null,
+            ];
+        }
+
+        return [
+            'type' => $type,
+            'id' => null,
+            'uuid' => $reference,
+        ];
+    }
+
+    /** Query for existing pivot rows matching the resolved reference. */
+    private function pivotQuery(array $reference)
+    {
+        $query = DB::table('hierarchyables')
+            ->where('hierarchyable_type', $reference['type']);
+
+        return $reference['uuid'] === null
+            ? $query->where('hierarchyable_id', $reference['id'])
+            : $query->where('hierarchyable_uuid', $reference['uuid']);
+    }
+
+    /**
+     * Writes one hierarchy link, using whichever column the reference needs.
+     */
+    private function linkToObject(int $hierarchyId, array $reference): void
+    {
+        DB::table('hierarchyables')->insert([
+            'hierarchy_id' => $hierarchyId,
+            'hierarchyable_type' => $reference['type'],
+            'hierarchyable_id' => $reference['id'] ?? 0,
+            'hierarchyable_uuid' => $reference['uuid'],
+        ]);
     }
 
     public function update(Request $request)
@@ -120,7 +199,16 @@ class HierarchyController extends Controller
             'name' => 'nullable|string|max:255',
             'user_id' => 'nullable|integer|exists:users,id',
             'hierarchyable_type' => 'nullable|string|in:post,event,audio,video,devotional',
-            'hierarchyable_id' => 'nullable|integer',
+            'hierarchyable_id' => ['nullable', function ($attribute, $value, $fail) {
+                if ($value === null || $value === '') {
+                    return;
+                }
+                $value = (string) $value;
+                if (ctype_digit($value) || \App\Models\Event::isUsableUuid($value)) {
+                    return;
+                }
+                $fail('The ' . $attribute . ' must be an integer id or a valid uuid.');
+            }],
         ]);
 
         if ($validator->fails()) {
@@ -128,6 +216,7 @@ class HierarchyController extends Controller
         }
 
         $data = collect($request->all())->toArray();
+        unset($data['hierarchyable_type'], $data['hierarchyable_id']);
         $id = $request->route('id');
         $result = Hierarchy::find($id);
 
@@ -138,13 +227,19 @@ class HierarchyController extends Controller
         $result->update($data);
 
         // Update the parent-object link when provided.
-        if (!empty($data['hierarchyable_type']) && !empty($data['hierarchyable_id'])) {
+        if (!empty($request['hierarchyable_type']) && !empty($request['hierarchyable_id'])) {
             // Remove old links for this hierarchy.
             DB::table('hierarchyables')
                 ->where('hierarchy_id', $id)
                 ->delete();
 
-            $this->linkToObject($id, $data['hierarchyable_type'], (int) $data['hierarchyable_id']);
+            $this->linkToObject(
+                $id,
+                $this->resolveReference(
+                    $request['hierarchyable_type'],
+                    (string) $request['hierarchyable_id']
+                )
+            );
         }
 
         return response()->json(['data' => true], 200);
@@ -192,7 +287,16 @@ class HierarchyController extends Controller
         $validator = Validator::make($request->all(), [
             'q' => 'nullable|string|min:3',
             'hierarchyable_type' => 'nullable|string|in:post,event,audio,video,devotional',
-            'hierarchyable_id' => 'nullable|integer',
+            'hierarchyable_id' => ['nullable', function ($attribute, $value, $fail) {
+                if ($value === null || $value === '') {
+                    return;
+                }
+                $value = (string) $value;
+                if (ctype_digit($value) || \App\Models\Event::isUsableUuid($value)) {
+                    return;
+                }
+                $fail('The ' . $attribute . ' must be an integer id or a valid uuid.');
+            }],
         ]);
         if ($validator->fails()) {
             return response()->json($validator->messages(), 422);
@@ -203,11 +307,19 @@ class HierarchyController extends Controller
 
         // Filter by parent object when provided.
         if (!empty($request['hierarchyable_type']) && !empty($request['hierarchyable_id'])) {
-            $hierarchies->whereIn('hierarchies.id', function ($q) use ($request) {
-                $q->select('hierarchy_id')
+            $reference = $this->resolveReference(
+                $request['hierarchyable_type'],
+                (string) $request['hierarchyable_id']
+            );
+            $hierarchies->whereIn('hierarchies.id', function ($q) use ($reference) {
+                $pivot = $q->select('hierarchy_id')
                   ->from('hierarchyables')
-                  ->where('hierarchyable_type', $request['hierarchyable_type'])
-                  ->where('hierarchyable_id', (int) $request['hierarchyable_id']);
+                  ->where('hierarchyable_type', $reference['type']);
+                if ($reference['uuid'] === null) {
+                    $pivot->where('hierarchyable_id', $reference['id']);
+                } else {
+                    $pivot->where('hierarchyable_uuid', $reference['uuid']);
+                }
             });
         }
 
@@ -243,7 +355,7 @@ class HierarchyController extends Controller
     /**
      * Link a hierarchy to a parent object via the hierarchyables pivot.
      */
-    private function linkToObject(int $hierarchyId, string $type, int $id): void
+    private function linkToObjectLegacy(int $hierarchyId, string $type, int $id): void
     {
         DB::table('hierarchyables')->insert([
             'hierarchy_id' => $hierarchyId,

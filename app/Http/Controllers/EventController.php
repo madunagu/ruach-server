@@ -43,6 +43,10 @@ class EventController extends Controller
         $data['poster_id'] = $userId;
         $data['poster_type'] = 'user';
         $event = Event::create($data);
+
+        // Adopt any relations the client saved against this draft's uuid.
+        $event->claimDraftRelations();
+
         //for quick use adding feed here, can be removed later
 
         $feedCreated = Feed::create(['parentable_type' => 'event', 'postable_type' => 'user', 'postable_id' => $userId, 'parentable_id' => $event->id]);

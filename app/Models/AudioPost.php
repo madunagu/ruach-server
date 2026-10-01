@@ -8,10 +8,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\Searchable as SearchableTrait;
+use App\Traits\HasUuid;
 
 class AudioPost extends Model
 {
-    use SearchableTrait, SoftDeletes, HasFactory;
+    use SearchableTrait, SoftDeletes, HasFactory, HasUuid;
 
     protected $searchable = [
         /**
@@ -30,6 +31,7 @@ class AudioPost extends Model
     ];
 
     protected $fillable = [
+        'uuid',
         'name',
         'src_url',
         'full_text',

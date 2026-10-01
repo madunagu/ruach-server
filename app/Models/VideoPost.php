@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\Searchable as SearchableTrait;
+use App\Traits\HasUuid;
 
 class VideoPost extends Model
 {
-    use SearchableTrait, SoftDeletes, HasFactory;
+    use SearchableTrait, SoftDeletes, HasFactory, HasUuid;
     protected $searchable = [
         /**
          * Columns and their priority in search results.
@@ -30,6 +31,7 @@ class VideoPost extends Model
 
 
     protected $fillable = [
+        'uuid',
         'name',
         'src_url',
         'full_text',

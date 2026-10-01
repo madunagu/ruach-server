@@ -68,6 +68,9 @@ class AudioPostController extends Controller
 
         $audio = AudioPost::create($data);
 
+        // Adopt any relations the client saved against this draft's uuid.
+        $audio->claimDraftRelations();
+
         // Best-effort embedded-lyrics extraction (fast, no ext deps).
         try {
             $lyrics = app(LyricsService::class)->extractFromDisk($path);
