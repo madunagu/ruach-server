@@ -16,6 +16,7 @@ use App\Models\Feed;
 use App\Http\Resources\AudioPostCollection;
 use App\Jobs\ProcessMediaVariants;
 use App\Services\LyricsService;
+use App\Services\PlayableFactory;
 use App\Services\MediaVariantService;
 use wapmorgan\MediaFile\MediaFile;
 
@@ -111,6 +112,15 @@ class AudioPostController extends Controller
         }
 
         $interacted = $this->saveRelated($data, $audio);
+
+        // Every upload gets a playable so playlists and the player can refer to
+        // one thing rather than to audio and video separately.
+        try {
+            $playable = app(PlayableFactory::class)->forAudio($audio);
+            $data['playable_id'] = $playable->id;
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         Feed::create(['parentable_type' => 'audio', 'postable_type' => 'user', 'postable_id' => $userId, 'parentable_id' => $audio->id]);
 

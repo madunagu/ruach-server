@@ -18,6 +18,7 @@ use App\Http\Controllers\HierarchyController;
 use App\Http\Controllers\HierarchyTreeController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PlaylistController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\SocietyController;
 use App\Http\Controllers\TagController;
@@ -153,6 +154,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/feed', [FeedController::class, 'load']);
     Route::get('/feed-by-tags', [FeedController::class, 'tags']);
     Route::get('/feed-by-user', [FeedController::class, 'profile']);
+
+    // Playlists: an ordered list of playables owned by the caller.
+    Route::get('/playlists/library', [PlaylistController::class, 'library']);
+    Route::get('/playlists', [PlaylistController::class, 'list']);
+    Route::post('/playlists', [PlaylistController::class, 'create']);
+    Route::get('/playlists/{id}', [PlaylistController::class, 'get']);
+    Route::put('/playlists/{id}', [PlaylistController::class, 'update']);
+    Route::delete('/playlists/{id}', [PlaylistController::class, 'delete']);
+    Route::post('/playlists/{id}/playables', [PlaylistController::class, 'addPlayable']);
+    Route::delete('/playlists/{id}/playables/{playableId}', [PlaylistController::class, 'removePlayable']);
+    Route::post('/playlists/{id}/reorder', [PlaylistController::class, 'reorder']);
 
     Route::get('/tags', [TagController::class, 'list']);
     Route::post('/tags', [TagController::class, 'create']);

@@ -17,6 +17,7 @@ use App\Models\VideoSrc;
 use App\Models\Feed;
 use App\Jobs\ProcessMediaVariants;
 use App\Services\LyricsService;
+use App\Services\PlayableFactory;
 
 class VideoPostController extends Controller
 {
@@ -104,6 +105,16 @@ class VideoPostController extends Controller
         }
 
         $interacted = $this->saveRelated($data, $videoPost);
+
+        // A video is also an audio recording, so it also gets an audio post and
+        // a playable. Both are best-effort: a failure here must not lose the
+        // upload the user actually asked for.
+        try {
+            $playable = app(PlayableFactory::class)->forVideo($videoPost, $path);
+            $data['playable_id'] = $playable->id;
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         $result = VideoPost::with(['srcs', 'poster', 'user'])
             ->with('hierarchies', 'addresses', 'tags', 'images', 'churches')

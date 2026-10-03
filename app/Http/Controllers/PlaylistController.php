@@ -2,181 +2,242 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
 use App\Models\Playlist;
-use App\Models\Feed;
-use App\Traits\Interactable;
-use App\Traits\Orderable;
+use App\Models\Playable;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Database\Eloquent\Builder;
 
 class PlaylistController extends Controller
 {
-    use Interactable, Orderable;
+    /**
+     * The authenticated user's playlists, each with its members in order.
+     *
+     * `playables_count` is loaded alongside so a list of playlists does not
+     * need one extra query per row to render a count.
+     */
+    public function list(Request $request)
+    {
+        $perPage = (int) ($request['perPage'] ?? 30);
+
+        $playlists = Playlist::where('user_id', Auth::id())
+            ->with(['playables.audioPost', 'playables.videoPost'])
+            ->withCount('playables')
+            ->orderByDesc('id')
+            ->paginate($perPage);
+
+        return response()->json($playlists);
+    }
+
     public function create(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'string|required',
-            'description' => 'string|nullable',
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->messages(), 422);
         }
 
-        $userId = Auth::id();
-        $data = collect($request->all())->toArray();
-        $data['user_id'] = $userId;
-        $data['poster_id'] = $userId;
-        $data['poster_type'] = 'user';
+        $playlist = Playlist::create([
+            'name' => $request['name'],
+            'description' => $request['description'] ?? null,
+            'user_id' => Auth::id(),
+        ]);
 
-        $playlist = Playlist::create($data);
-        $interacted = $this->saveRelated($data, $playlist);
+        return response()->json(
+            ['data' => $playlist->loadCount('playables')],
+            201
+        );
+    }
 
-        //TODO: notify relevant users of activity
-        //for quick use adding feed here, can be removed later
-        $feedCreated = Feed::create(['parentable_type' => 'playlist', 'postable_type' => 'user', 'postable_id' => $userId, 'parentable_id' => $playlist->id]);
+    public function get(Request $request)
+    {
+        $playlist = $this->findForUser((int) $request->route('id'));
 
-
-        $result = Playlist::withCount('comments')
-            ->with(['user', 'poster'])
-            ->with('hierarchies', 'tags', 'images',  'churches')
-            ->withCount([
-                'comments',
-                'likes',
-                'likes as liked' => function (Builder $query) use ($userId) {
-                    $query->where('user_id', $userId);
-                },
-            ])
-            ->withCount([
-                'views',
-                'views as viewed' => function (Builder $query) use ($userId) {
-                    $query->where('user_id', $userId);
-                },
-            ])->find($playlist->id);
-
-        if ($result) {
-            return response()->json(['data' => $playlist], 201);
-        } else {
-            return response()->json(['data' => false, 'errors' => 'unknown error occured'], 400);
+        if ($playlist === null) {
+            return response()->json(['data' => false], 404);
         }
+
+        return response()->json([
+            'data' => $playlist->load([
+                'playables.audioPost',
+                'playables.videoPost',
+            ]),
+        ]);
     }
 
     public function update(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'string|nullable',
-            'description' => 'string|required',
+        $playlist = $this->findForUser((int) $request->route('id'));
 
+        if ($playlist === null) {
+            return response()->json(['data' => false], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'sometimes|required|string|max:255',
+            'description' => 'nullable|string|max:1000',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->messages(), 422);
         }
-        $id = $request->route('id');
 
-        $userId = Auth::id();
-        $data = collect($request->all())->toArray();
-        $data['user_id'] = $userId;
-        $playlist = Playlist::find($id);
+        $playlist->update($request->only(['name', 'description']));
 
-        $playlist = $playlist->update($data);
-        $interacted = $this->saveRelated($data, $playlist);
-        $result = Playlist::withCount('comments')
-            ->with(['user', 'poster'])
-            ->with('hierarchies', 'tags', 'images',  'churches')
-            ->withCount([
-                'comments',
-                'likes',
-                'likes as liked' => function (Builder $query) use ($userId) {
-                    $query->where('user_id', $userId);
-                },
-            ])
-            ->withCount([
-                'views',
-                'views as viewed' => function (Builder $query) use ($userId) {
-                    $query->where('user_id', $userId);
-                },
-            ])->find($playlist->id);
-
-        if ($result) {
-            return response()->json(['data' => $result], 201);
-        } else {
-            return response()->json(['data' => false, 'errors' => 'unknown error occured'], 400);
-        }
-    }
-
-
-    public function get(Request $request)
-    {
-        $id = (int)$request->route('id');
-        // $address = Address::find($id);
-        // return response()->json([
-        //         'data' => $address
-        //     ], 200);
-
-        $userId = Auth::user()->id;
-        if ($playlist = Playlist::with(['user', 'poster'])
-            ->with('hierarchies', 'tags', 'images',  'churches')
-            ->withCount([
-                'comments',
-                'likes',
-                'likes as liked' => function (Builder $query) use ($userId) {
-                    $query->where('user_id', $userId);
-                },
-            ])
-            ->withCount([
-                'views',
-                'views as viewed' => function (Builder $query) use ($userId) {
-                    $query->where('user_id', $userId);
-                },
-            ])->find($id)
-        ) {
-            return response()->json([
-                'data' => $playlist
-            ], 200);
-        } else {
-            return response()->json([
-                'data' => false
-            ], 404);
-        }
-    }
-
-    public function list(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'q' => 'nullable|string|min:1',
-            'o' => 'nullable|string|min:1',
-            'd' => 'nullable|string|min:1'
-        ]);
-        if ($validator->fails()) {
-            return response()->json($validator->messages(), 422);
-        }
-
-        $params = $data = collect($request->all())->toArray();
-        $orderParams = $this->orderParams($params);
-        $length = (int) (empty($request['perPage']) ? 15 : $request['perPage']);
-
-        $comments = Playlist::with('user', 'poster')->withCount('likes')->withCount('comments')->withCount('views')
-            ->orderBy('playlists.' . $orderParams->order,  $orderParams->direction)
-            ->paginate($length);
-
-        return response()->json($comments);
+        return response()->json(['data' => $playlist->fresh()]);
     }
 
     public function delete(Request $request)
     {
-        $id = (int)$request->route('id');
-        if ($post = Playlist::find($id)) {
-            $post->delete();
-            return response()->json([
-                'data' => true
-            ], 200);
-        } else {
-            return response()->json([
-                'data' => false
-            ], 404);
+        $playlist = $this->findForUser((int) $request->route('id'));
+
+        if ($playlist === null) {
+            return response()->json(['data' => false], 404);
         }
+
+        $playlist->playables()->detach();
+        $playlist->delete();
+
+        return response()->json(['data' => true]);
+    }
+
+    /**
+     * Appends a playable, or moves it to the end when already present.
+     *
+     * Idempotent by design: a retried request should not duplicate the member
+     * or fail on the pivot's unique index.
+     */
+    public function addPlayable(Request $request)
+    {
+        $playlist = $this->findForUser((int) $request->route('id'));
+
+        if ($playlist === null) {
+            return response()->json(['data' => false], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'playable_id' => 'required|integer|exists:playables,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->messages(), 422);
+        }
+
+        $playable = Playable::find((int) $request['playable_id']);
+        $playlist->addPlayable($playable);
+
+        return response()->json([
+            'data' => $playlist->load([
+                'playables.audioPost',
+                'playables.videoPost',
+            ]),
+        ]);
+    }
+
+    public function removePlayable(Request $request)
+    {
+        $playlist = $this->findForUser((int) $request->route('id'));
+
+        if ($playlist === null) {
+            return response()->json(['data' => false], 404);
+        }
+
+        // Read the id from the route: the client has no reason to repeat it in
+        // the body, and a DELETE with an empty body is the natural request.
+        $playable = Playable::find((int) $request->route('playableId'));
+        if ($playable === null) {
+            return response()->json(['data' => false], 404);
+        }
+
+        $playlist->removePlayable($playable);
+
+        return response()->json([
+            'data' => $playlist->load([
+                'playables.audioPost',
+                'playables.videoPost',
+            ]),
+        ]);
+    }
+
+    /**
+     * Rewrites the member order.
+     *
+     * Accepts the full ordered id list and writes dense ranks, so repeated
+     * reorders cannot accumulate gaps or collide on a rank.
+     */
+    public function reorder(Request $request)
+    {
+        $playlist = $this->findForUser((int) $request->route('id'));
+
+        if ($playlist === null) {
+            return response()->json(['data' => false], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'playable_ids' => 'required|array',
+            'playable_ids.*' => 'integer|exists:playables,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->messages(), 422);
+        }
+
+        // Only reorder members the playlist actually has, so a crafted list
+        // cannot pull an unrelated playable into it.
+        $memberIds = $playlist->playables()->pluck('playables.id')->all();
+        $requested = array_map('intval', $request['playable_ids']);
+        $ordered = array_values(array_intersect($requested, $memberIds));
+
+        // Anything the client omitted keeps its relative position at the end
+        // rather than being silently dropped.
+        foreach ($memberIds as $id) {
+            if (!in_array($id, $ordered, true)) {
+                $ordered[] = $id;
+            }
+        }
+
+        DB::transaction(function () use ($playlist, $ordered) {
+            $playlist->reorder($ordered);
+        });
+
+        return response()->json([
+            'data' => $playlist->load([
+                'playables.audioPost',
+                'playables.videoPost',
+            ]),
+        ]);
+    }
+
+    /**
+     * Playables the given user owns, for picking something to add.
+     *
+     * Deliberately ignores a client-supplied owner so one user cannot list
+     * another's library.
+     */
+    public function library(Request $request)
+    {
+        $perPage = (int) ($request['perPage'] ?? 50);
+
+        $playables = Playable::ownedBy(Auth::id())
+            ->with(['audioPost', 'videoPost'])
+            ->paginate($perPage);
+
+        return response()->json($playables);
+    }
+
+    /**
+     * Scopes a lookup to the authenticated user.
+     *
+     * Without this an id could read, mutate or delete another user's playlist.
+     */
+    private function findForUser(int $id): ?Playlist
+    {
+        return Playlist::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->first();
     }
 }
