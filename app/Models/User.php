@@ -67,9 +67,21 @@ class User extends Authenticatable
         return $this->hasMany(Feed::class, 'poster_id');
     }
 
+    /** Threads this user takes part in. */
+    public  function conversations()
+    {
+        return $this->belongsToMany(
+            Conversation::class,
+            'conversation_user',
+            'user_id',
+            'conversation_id'
+        )->withPivot('last_read_message_id');
+    }
+
+    /** Messages this user has sent. */
     public  function messages()
     {
-        return $this->hasMany(Messages::class, 'reciever_id');
+        return $this->hasMany(Message::class, 'user_id');
     }
 
     public function infoCard()

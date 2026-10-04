@@ -6,6 +6,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Validator;
 use App\Models\User;
+use App\Models\Conversation;
 use App\Models\Event;
 use App\Models\Image;
 use App\Services\ActivityNotifier;
@@ -120,7 +121,6 @@ class UserController extends Controller
                 'following',
                 'likes',
                 'followers',
-                'messages',
                 // Drives the badge the client already renders; previously
                 // commented out, so the count was always absent.
                 'unreadNotifications as notifications_count',
@@ -130,6 +130,11 @@ class UserController extends Controller
             ])
             ->find($id)
         ) {
+            // `messages_count` is the unread badge, not a tally of everything
+            // this user has ever sent. It needs the conversation pivot, so it
+            // cannot be expressed as a withCount.
+            $user->messages_count = Conversation::unreadTotalFor($user->id);
+
             return response()->json(
                 $user,
                 200

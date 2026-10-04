@@ -18,6 +18,7 @@ use App\Http\Controllers\HierarchyController;
 use App\Http\Controllers\HierarchyTreeController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\PlaylistController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\SocietyController;
@@ -165,6 +166,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/playlists/{id}/playables', [PlaylistController::class, 'addPlayable']);
     Route::delete('/playlists/{id}/playables/{playableId}', [PlaylistController::class, 'removePlayable']);
     Route::post('/playlists/{id}/reorder', [PlaylistController::class, 'reorder']);
+
+    // Messaging: private threads between two users and one group per event.
+    // Every lookup is scoped to the caller's own memberships in the controller.
+    Route::get('/conversations', [ConversationController::class, 'list']);
+    Route::post('/conversations', [ConversationController::class, 'open']);
+    Route::get('/conversations/unread', [ConversationController::class, 'unreadCount']);
+    Route::get('/conversations/{id}', [ConversationController::class, 'messages']);
+    Route::post('/conversations/{id}/messages', [ConversationController::class, 'send']);
+    Route::post('/conversations/{id}/read', [ConversationController::class, 'read']);
 
     Route::get('/tags', [TagController::class, 'list']);
     Route::post('/tags', [TagController::class, 'create']);
