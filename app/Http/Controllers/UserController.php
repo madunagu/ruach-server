@@ -74,13 +74,16 @@ class UserController extends Controller
             'following',
             'likes',
             'followers',
-            'messages',
             'followers as is_following' => function (Builder $query) use ($id) {
                 $query->where('user_id', $id);
             },
         ])->find($id);
 
         if ($result) {
+            // Same badge semantics as the read endpoint: unread, not sent.
+            $result->messages_count = Conversation::unreadTotalFor($result->id);
+            $result->notifications_count = $result->unreadNotifications()->count();
+
             return response()->json(['data' => $result], 201);
         } else {
             return response()->json(['data' => false, 'errors' => 'unknown error occured'], 400);
@@ -91,17 +94,23 @@ class UserController extends Controller
     {
         $id = (int)$request->route('id');
 
-        if ($user = User::find($id)->with('images')
+        if ($user = User::with('images')
             ->withCount([
                 'following',
                 'likes',
                 'followers',
-                'messages',
+                'unreadNotifications as notifications_count',
                 'followers as is_following' => function (Builder $query) use ($id) {
                     $query->where('user_id', $id);
                 },
-            ])->find($id)
+            ])
+            ->find($id)
         ) {
+            // `messages_count` is the unread badge rather than a tally of
+            // everything this user has ever sent. It reads the conversation
+            // pivot, so it cannot be expressed as a withCount.
+            $user->messages_count = Conversation::unreadTotalFor($user->id);
+
             return response()->json([
                 'data' => $user
             ], 200);
