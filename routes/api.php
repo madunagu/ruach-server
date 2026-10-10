@@ -124,6 +124,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/societies/{id}', [SocietyController::class, 'like']);
 
     Route::get('/users',  [UserController::class, 'list']);
+    Route::post('/users/public-profiles', [UserController::class, 'createPublicProfile']);
     Route::post('/users',  [UserController::class, 'create']);
     Route::get('/users/{id}',  [UserController::class, 'get']);
     Route::put('/users/{id}',  [UserController::class, 'update']);

@@ -44,6 +44,58 @@ class UserController extends Controller
         }
     }
 
+    /**
+     * Create a display-only public profile for someone without an account.
+     *
+     * Used by the hierarchy (team) sheet: an inline name plus an optional
+     * avatar image picked from the device. The row can never log in — it
+     * gets a random unusable email/password — and is safe to render
+     * anywhere a user is shown or linked from a hierarchy.
+     *
+     * Accepts multipart/form-data:
+     *   name        — required string
+     *   avatar      — optional image file (jpeg,png,gif,webp, max 12MB)
+     *   avatar_url  — optional direct URL, used when no file is sent
+     */
+    public function createPublicProfile(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'avatar' => 'nullable|file|image|mimes:jpeg,jpg,png,gif,webp|max:12288',
+            'avatar_url' => 'nullable|string|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'The public profile is invalid.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $name = trim($request->input('name'));
+
+        $avatarUrl = trim((string) $request->input('avatar_url', ''));
+        if ($request->hasFile('avatar')) {
+            $file = $request->file('avatar');
+            $stored = $file->store('avatars', 'public');
+            $avatarUrl = \Storage::disk('public')->url($stored);
+        }
+        if ($avatarUrl === '') {
+            $avatarUrl = 'https://gravatar.com/avatar/' . hash('sha256', strtolower($name));
+        }
+
+        $user = User::create([
+            'name' => $name,
+            'email' => 'public-' . (string) Str::uuid() . '@placeholder.local',
+            'password' => \Hash::make(Str::random(32)),
+            'avatar' => $avatarUrl,
+            'is_public_profile' => true,
+            'created_by' => Auth::id(),
+        ]);
+
+        return response()->json(['data' => $user], 201);
+    }
+
     public function update(Request $request)
     {
         $validator = Validator::make($request->all(), [

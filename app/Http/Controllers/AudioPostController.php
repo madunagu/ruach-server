@@ -35,7 +35,7 @@ class AudioPostController extends Controller
             'length' => 'nullable|integer',
             'language' => 'nullable|string',
             'address_id' => 'nullable|integer|exists:addresses,id',
-            'audio' => 'required|file|mimes:mp3,wav,m4a,wma,aac,flac,amr,ogg|max:51200',
+            // 'audio' => 'required|file|mimes:mp3,wav,m4a,wma,aac,flac,amr,ogg|max:51200',
         ]);
 
         if ($validator->fails()) {

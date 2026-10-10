@@ -21,7 +21,7 @@ use App\Models\Like;
 
 trait Interactable
 {
-    public  $models = [
+    public $models = [
         AudioPostController::class => 'audio',
         VideoPostController::class => 'video',
         ChurchController::class => 'church',
@@ -32,7 +32,7 @@ trait Interactable
         CommentController::class => 'comment',
     ];
 
-    function saveRelated(array $data, Model $created = null): array
+    public function saveRelated(array $data, Model $created = null): array
     {
         //TODO: check if method exist to avoid obvios errors on these
         //TODO: remove previous relationships before adding new
@@ -45,19 +45,33 @@ trait Interactable
             $created->churches()->syncWithoutDetaching([(int) $data['church_id']]);
         }
         if (!empty($data['address_ids'])) {
-            $created->addresses()->syncWithoutDetaching($data['address_ids']);
+            $created->addresses()->syncWithoutDetaching($this->clean($data['address_ids']));
         }
         if (!empty($data['image_ids'])) {
-            $created->images()->syncWithoutDetaching($data['image_ids']);
+            $created->images()->syncWithoutDetaching($this->clean($data['image_ids']));
         }
         if (!empty($data['tag_ids'])) {
-            $created->tags()->syncWithoutDetaching($data['tag_ids']);
+            $created->tags()->syncWithoutDetaching($this->clean($data['tag_ids']));
         }
         if (!empty($data['hierarchy_ids'])) {
-            $created->hierarchies()->syncWithoutDetaching($data['hierarchy_ids']);
+            $created->hierarchies()->syncWithoutDetaching($this->clean($data['hierarchy_ids']));
         }
 
         return $data;
+    }
+
+    public function clean($data)
+    {
+        $subIds = $data;
+
+        // If Flutter sent it as a comma-separated string "3,4", explode it into an array [3, 4]
+        if (is_string($subIds)) {
+            $subIds = explode(',', $subIds);
+        }
+
+        // Clean up any accidental whitespace or empty entries
+        $subIds = array_filter(array_map('intval', $subIds));
+        return $subIds;
     }
 
     public function like(Request $request)

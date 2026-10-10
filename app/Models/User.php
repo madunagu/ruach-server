@@ -30,6 +30,8 @@ class User extends Authenticatable
         'is_minister',
         'is_verified',
         'is_editor',
+        'is_public_profile',
+        'created_by',
     ];
 
     /**
